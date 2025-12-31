@@ -49,7 +49,7 @@ function handleProcessWithAI() {
   }
   content.processWithAI(
     settings.getLLMConfig(),
-    settings.currentPrompt.value,
+    settings.getFinalPrompt(),
     settings.promptModified.value
   );
 }

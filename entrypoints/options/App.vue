@@ -4,10 +4,10 @@ import type { LLMProvider, LLMConfig } from '@/types';
 import {
   getSettings,
   saveLLMConfig,
-  savePrompt,
-  resetPrompt,
+  saveUserPrompt,
+  resetUserPrompt,
   PROVIDER_PRESETS,
-  DEFAULT_PROMPT,
+  DEFAULT_USER_PROMPT,
 } from '@/utils/storage';
 import { testConnection } from '@/utils/llm';
 
@@ -54,7 +54,7 @@ onMounted(async () => {
     apiKey.value = settings.llm.apiKey;
     baseUrl.value = settings.llm.baseUrl;
     model.value = settings.llm.model;
-    prompt.value = settings.prompt;
+    prompt.value = settings.userPrompt;
   } catch (error) {
     console.error('加载设置失败:', error);
   } finally {
@@ -107,7 +107,7 @@ async function handleTestConnection() {
 async function handleSavePrompt() {
   saving.value = true;
   try {
-    await savePrompt(prompt.value);
+    await saveUserPrompt(prompt.value);
     saveMessage.value = '✓ Prompt 已保存';
     setTimeout(() => {
       saveMessage.value = '';
@@ -121,8 +121,8 @@ async function handleSavePrompt() {
 
 // 重置 Prompt
 async function handleResetPrompt() {
-  await resetPrompt();
-  prompt.value = DEFAULT_PROMPT;
+  await resetUserPrompt();
+  prompt.value = DEFAULT_USER_PROMPT;
   saveMessage.value = '✓ 已重置为默认';
   setTimeout(() => {
     saveMessage.value = '';

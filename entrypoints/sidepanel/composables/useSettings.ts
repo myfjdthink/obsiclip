@@ -1,6 +1,6 @@
 import { ref, computed, watch } from 'vue';
 import type { LLMConfig, LLMProvider } from '@/types';
-import { getSettings, saveSettings, PROVIDER_PRESETS, DEFAULT_PROMPT } from '@/utils/storage';
+import { getSettings, saveSettings, PROVIDER_PRESETS, DEFAULT_USER_PROMPT, buildFinalPrompt } from '@/utils/storage';
 import { testConnection } from '@/utils/llm';
 
 export function useSettings() {
@@ -63,7 +63,7 @@ export function useSettings() {
     folder.value = settings.obsidian.folder;
     tags.value = settings.obsidian.tags.join(', ');
     recentPaths.value = settings.recentPaths;
-    currentPrompt.value = settings.prompt;
+    currentPrompt.value = settings.userPrompt;
     return settings;
   }
 
@@ -93,7 +93,7 @@ export function useSettings() {
     try {
       const settings = await getSettings();
       settings.llm = getLLMConfig();
-      settings.prompt = currentPrompt.value;
+      settings.userPrompt = currentPrompt.value;
       settings.obsidian = {
         vault: vault.value,
         folder: folder.value,
@@ -118,8 +118,13 @@ export function useSettings() {
 
   // 重置 Prompt
   function handleResetPrompt() {
-    currentPrompt.value = DEFAULT_PROMPT;
+    currentPrompt.value = DEFAULT_USER_PROMPT;
     promptModified.value = true;
+  }
+
+  // 获取最终组合的 Prompt
+  function getFinalPrompt(): string {
+    return buildFinalPrompt(currentPrompt.value);
   }
 
   return {
@@ -149,5 +154,6 @@ export function useSettings() {
     handleTestConnection,
     handleSaveSettings,
     handleResetPrompt,
+    getFinalPrompt,
   };
 }

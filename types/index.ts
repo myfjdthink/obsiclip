@@ -12,7 +12,7 @@ export interface LLMConfig {
 // 用户设置
 export interface UserSettings {
   llm: LLMConfig;
-  prompt: string;
+  userPrompt: string;
   obsidian: ObsidianConfig;
   recentPaths: string[];
 }

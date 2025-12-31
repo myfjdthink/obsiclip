@@ -1,10 +1,9 @@
 import type { UserSettings, LLMConfig, ObsidianConfig } from '@/types';
 
-// 默认系统提示词
-export const DEFAULT_PROMPT = `你是一个专业的知识管理助手。请处理以下网页内容，返回 YAML frontmatter + Markdown 格式的结构化数据。
+// 系统固定提示词（用户不可修改）
+export const SYSTEM_PROMPT = `你是一个专业的知识管理助手。请处理以下网页内容，返回 YAML frontmatter + Markdown 格式的结构化数据。
 
 ## 输出格式（严格遵循）
-\`\`\`markdown
 ---
 title: 重新生成的标题
 category: 分类
@@ -12,11 +11,15 @@ summary: 50-100字摘要
 ---
 
 （正文内容）
-\`\`\`
 
-## 字段说明
+## 重要约束
+- 先输出 frontmatter（---包裹的部分），再输出正文
+- frontmatter 必须是有效的 YAML 格式
+- 不要包含任何解释或对话
+- 用中文输出`;
 
-### title（标题）
+// 用户可自定义提示词（默认值）
+export const DEFAULT_USER_PROMPT = `## 标题生成规则
 根据内容重新生成一个清晰、准确的标题：
 - 避免标题党、震惊体、夸张表述
 - 让读者能快速理解文章主题
@@ -25,7 +28,7 @@ summary: 50-100字摘要
   - model 类：保留原名如「GPT-4」「Claude 3.5」
   - concept 类：使用中文概念名如「检索增强生成 (RAG)」
 
-### category（分类）
+## 分类方式
 从以下选项中选择最匹配的一个：
 - model：AI 模型相关（GPT、Claude、Llama 等）
 - tool：开发工具、框架（LangChain、Cursor 等）
@@ -33,44 +36,41 @@ summary: 50-100字摘要
 - concept：AI 概念、方法论（RAG、提示工程等）
 - other：无法归类的内容
 
-### summary（摘要）
+## 摘要要求
 50-100 字的内容摘要，突出核心观点和实用价值。
 
-### 正文内容
+## 正文整理方式
 **不要保留原文**，用以下结构重写，只保留关键信息：
 
-## 要点速览
+### 要点速览
 - 要点1：核心结论或发现
 - 要点2：...
 - 要点3：...
 （3-5 条，突出实际落地价值）
 
-## 背景
+### 背景
 文章要解决的问题/动机（2-3 句话）
 
-## 核心内容
+### 核心内容
 核心方案/模型/系统设计的简述（可分小节）
 
-## 优势与局限
+### 优势与局限
 **优势**：
 - ...
 
 **局限**：
 - ...
 
-## 适用场景
+### 适用场景
 - 场景1
 - 场景2
 
-注意：
-- 用中文输出
-- 保留必要的代码块和数据
-- 如果某个部分原文没有相关内容，可以省略该部分
+注意：保留必要的代码块和数据，如果某个部分原文没有相关内容可以省略`;
 
-## 重要
-- 先输出 frontmatter（---包裹的部分），再输出正文
-- frontmatter 必须是有效的 YAML 格式
-- 不要包含任何解释或对话`;
+// 组合最终 Prompt
+export function buildFinalPrompt(userPrompt: string): string {
+  return `${SYSTEM_PROMPT}\n\n${userPrompt}`;
+}
 
 // 服务商预设配置
 export const PROVIDER_PRESETS: Record<string, { baseUrl: string; models: string[] }> = {
@@ -104,7 +104,7 @@ const DEFAULT_SETTINGS: UserSettings = {
     baseUrl: PROVIDER_PRESETS.openai.baseUrl,
     model: 'gpt-4o-mini',
   },
-  prompt: DEFAULT_PROMPT,
+  userPrompt: DEFAULT_USER_PROMPT,
   obsidian: {
     vault: '',
     folder: '',
@@ -240,22 +240,22 @@ export async function saveLLMConfig(config: LLMConfig): Promise<void> {
   await saveSettings(settings);
 }
 
-// 获取 Prompt
-export async function getPrompt(): Promise<string> {
+// 获取用户 Prompt
+export async function getUserPrompt(): Promise<string> {
   const settings = await getSettings();
-  return settings.prompt;
+  return settings.userPrompt;
 }
 
-// 保存 Prompt
-export async function savePrompt(prompt: string): Promise<void> {
+// 保存用户 Prompt
+export async function saveUserPrompt(userPrompt: string): Promise<void> {
   const settings = await getSettings();
-  settings.prompt = prompt;
+  settings.userPrompt = userPrompt;
   await saveSettings(settings);
 }
 
-// 重置 Prompt 为默认值
-export async function resetPrompt(): Promise<void> {
-  await savePrompt(DEFAULT_PROMPT);
+// 重置用户 Prompt 为默认值
+export async function resetUserPrompt(): Promise<void> {
+  await saveUserPrompt(DEFAULT_USER_PROMPT);
 }
 
 // 获取 Obsidian 配置

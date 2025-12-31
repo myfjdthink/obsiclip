@@ -1,4 +1,4 @@
-import { getLLMConfig, getPrompt } from '@/utils/storage';
+import { getLLMConfig, getUserPrompt, buildFinalPrompt } from '@/utils/storage';
 import { streamChatCompletion } from '@/utils/llm';
 import type { Message, AIProcessMessage } from '@/types';
 
@@ -43,8 +43,8 @@ async function handleAIProcess(message: AIProcessMessage, sender: browser.runtim
     config = await getLLMConfig();
   }
 
-  // 如果没有提供 prompt，从存储中获取
-  const systemPrompt = userPrompt || await getPrompt();
+  // 如果没有提供 prompt，从存储中获取并组合
+  const systemPrompt = userPrompt || buildFinalPrompt(await getUserPrompt());
 
   try {
     // 流式处理
