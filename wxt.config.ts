@@ -4,8 +4,8 @@ import { defineConfig } from 'wxt';
 export default defineConfig({
   modules: ['@wxt-dev/module-vue'],
   manifest: {
-    name: 'ObsiClip 黑曜剪',
-    description: '智能网页剪藏到 Obsidian - AI 赋能的知识管理助手',
+    name: 'ObsiClip',
+    description: 'AI-Powered Web Clipper for Obsidian - Summarize, Tag & Save',
     version: '0.1.0',
     permissions: [
       'activeTab',
@@ -24,7 +24,7 @@ export default defineConfig({
       default_path: 'sidepanel.html',
     },
     action: {
-      default_title: 'ObsiClip 黑曜剪',
+      default_title: 'ObsiClip',
     },
   },
 });

@@ -1,7 +1,25 @@
 {
   "name": "obsiclip",
-  "description": "智能网页剪藏到 Obsidian - AI 赋能的知识管理助手",
-  "private": true,
+  "description": "AI-Powered Web Clipper for Obsidian - Summarize, Tag & Save",
+  "private": false,
+  "license": "MIT",
+  "author": "nicepkg",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/myfjdthink/obsiclip.git"
+  },
+  "bugs": {
+    "url": "https://github.com/myfjdthink/obsiclip/issues"
+  },
+  "homepage": "https://github.com/myfjdthink/obsiclip#readme",
+  "keywords": [
+    "obsidian",
+    "web-clipper",
+    "ai",
+    "browser-extension",
+    "markdown",
+    "knowledge-management"
+  ],
   "version": "0.1.0",
   "type": "module",
   "scripts": {
