@@ -49,6 +49,7 @@ const settingsTesting = ref(false);
 const settingsTestResult = ref<{ success: boolean; error?: string } | null>(null);
 const settingsSaving = ref(false);
 const settingsSaveMessage = ref('');
+const settingsSaveSuccess = ref(true);
 
 // 是否已配置 API Key
 const hasApiKey = computed(() => settingsApiKey.value.trim().length > 0);
@@ -279,7 +280,8 @@ async function handleSaveSettings() {
 
     await saveSettings(settings);
 
-    settingsSaveMessage.value = '✓ 保存成功';
+    settingsSaveSuccess.value = true;
+    settingsSaveMessage.value = '保存成功';
     setTimeout(() => {
       settingsSaveMessage.value = '';
       // 如果是首次配置完成，关闭设置面板
@@ -288,7 +290,8 @@ async function handleSaveSettings() {
       }
     }, 1500);
   } catch (error) {
-    settingsSaveMessage.value = '✗ 保存失败';
+    settingsSaveSuccess.value = false;
+    settingsSaveMessage.value = '保存失败';
     console.error('保存设置失败:', error);
   } finally {
     settingsSaving.value = false;
@@ -437,11 +440,13 @@ async function copyHtml() {
             </button>
           </div>
 
-          <div v-if="settingsTestResult" :class="['test-result', settingsTestResult.success ? 'success' : 'error']">
+          <div v-if="settingsTestResult" :class="['test-result', settingsTestResult.success ? 'is-success' : 'is-error']">
             {{ settingsTestResult.success ? '✓ 连接成功' : `✗ ${settingsTestResult.error}` }}
           </div>
 
-          <div v-if="settingsSaveMessage" class="save-message">{{ settingsSaveMessage }}</div>
+          <div v-if="settingsSaveMessage" :class="['save-message', settingsSaveSuccess ? 'is-success' : 'is-error']">
+            {{ settingsSaveMessage }}
+          </div>
         </div>
 
         <!-- Prompt 设置（占据更多空间） -->
@@ -830,27 +835,31 @@ async function copyHtml() {
   cursor: not-allowed;
 }
 
-.test-result {
+.test-result,
+.save-message {
   padding: 8px;
   border-radius: 5px;
   font-size: 12px;
   margin-top: 4px;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  height: auto;
+  min-height: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
-.test-result.success {
+.test-result.is-success,
+.save-message.is-success {
   background: #e8f5e9;
   color: #2e7d32;
 }
 
-.test-result.error {
+.test-result.is-error,
+.save-message.is-error {
   background: #ffebee;
   color: #c62828;
-}
-
-.save-message {
-  font-size: 12px;
-  color: #2e7d32;
-  margin-top: 4px;
 }
 
 /* Prompt 配置区（占据剩余空间） */
