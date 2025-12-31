@@ -19,6 +19,7 @@
     "highlight.js": "^11.11.1",
     "marked": "^15.0.6",
     "marked-highlight": "^2.2.3",
+    "markstream-vue": "0.0.4-beta.7",
     "turndown": "^7.2.0",
     "vue": "^3.5.25"
   },

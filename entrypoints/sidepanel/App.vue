@@ -113,7 +113,7 @@ function handleSaveSettings() {
           :class="['tab', { active: content.activeTab.value === 'ai' }]"
           @click="content.activeTab.value = 'ai'"
         >
-          AI 预览
+          AI 整理
         </button>
       </div>
 
@@ -142,7 +142,7 @@ function handleSaveSettings() {
           :isProcessing="content.isProcessing.value"
           :processingError="content.processingError.value"
           :aiMarkdown="content.aiMarkdown.value"
-          :renderedMarkdown="content.renderedMarkdown.value"
+          :aiResult="content.aiResult.value"
           @regenerate="handleProcessWithAI"
           @retry="handleProcessWithAI"
         />
@@ -150,7 +150,6 @@ function handleSaveSettings() {
 
       <!-- 底部保存区 -->
       <SaveFooter
-        v-model:vault="settings.vault.value"
         v-model:folder="settings.folder.value"
         v-model:tags="settings.tags.value"
         :recentPaths="settings.recentPaths.value"

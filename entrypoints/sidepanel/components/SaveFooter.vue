@@ -2,7 +2,6 @@
 import { ref } from 'vue';
 
 defineProps<{
-  vault: string;
   folder: string;
   tags: string;
   recentPaths: string[];
@@ -10,7 +9,6 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  'update:vault': [value: string];
   'update:folder': [value: string];
   'update:tags': [value: string];
   saveToObsidian: [];
@@ -45,29 +43,21 @@ function handleCopyHtml() {
 <template>
   <footer class="footer">
     <div class="save-config">
-      <div class="config-row">
-        <input
-          :value="vault"
-          @input="emit('update:vault', ($event.target as HTMLInputElement).value)"
-          placeholder="Vault（可选）"
-          class="config-input"
-        />
-        <input
-          :value="folder"
-          @input="emit('update:folder', ($event.target as HTMLInputElement).value)"
-          placeholder="文件夹路径"
-          class="config-input"
-          list="recent-paths"
-        />
-        <datalist id="recent-paths">
-          <option v-for="path in recentPaths" :key="path" :value="path" />
-        </datalist>
-      </div>
+      <input
+        :value="folder"
+        @input="emit('update:folder', ($event.target as HTMLInputElement).value)"
+        placeholder="文件夹路径"
+        class="config-input"
+        list="recent-paths"
+      />
+      <datalist id="recent-paths">
+        <option v-for="path in recentPaths" :key="path" :value="path" />
+      </datalist>
       <input
         :value="tags"
         @input="emit('update:tags', ($event.target as HTMLInputElement).value)"
         placeholder="标签（逗号分隔）"
-        class="config-input tags-input"
+        class="config-input"
       />
     </div>
 
@@ -98,13 +88,10 @@ function handleCopyHtml() {
 }
 
 .save-config {
-  margin-bottom: 12px;
-}
-
-.config-row {
   display: flex;
+  flex-direction: column;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .config-input {
@@ -118,10 +105,6 @@ function handleCopyHtml() {
 .config-input:focus {
   outline: none;
   border-color: #007aff;
-}
-
-.tags-input {
-  width: 100%;
 }
 
 .save-actions {

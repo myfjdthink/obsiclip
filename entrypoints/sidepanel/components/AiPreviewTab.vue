@@ -1,5 +1,16 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
+import MarkdownRender from 'markstream-vue';
+import 'markstream-vue/index.css';
+import type { AIProcessedContent } from '@/types';
+
+const CATEGORY_LABELS: Record<string, string> = {
+  model: '🤖 模型',
+  tool: '🔧 工具',
+  product: '📦 产品',
+  concept: '💡 概念',
+  other: '📄 其他',
+};
 
 defineProps<{
   currentPrompt: string;
@@ -7,7 +18,7 @@ defineProps<{
   isProcessing: boolean;
   processingError: string;
   aiMarkdown: string;
-  renderedMarkdown: string;
+  aiResult: AIProcessedContent | null;
 }>();
 
 const emit = defineEmits<{
@@ -57,7 +68,36 @@ const showPromptEditor = ref(false);
         <button @click="emit('retry')">重试</button>
       </div>
 
-      <div v-else-if="aiMarkdown" class="markdown-preview" v-html="renderedMarkdown"></div>
+      <template v-else-if="aiResult">
+        <!-- 结构化结果展示 -->
+        <div class="ai-result">
+          <!-- 元信息 -->
+          <div class="meta-info">
+            <span class="category-tag">{{ CATEGORY_LABELS[aiResult.category] || aiResult.category }}</span>
+          </div>
+
+          <!-- 摘要 -->
+          <blockquote v-if="aiResult.summary" class="summary">
+            {{ aiResult.summary }}
+          </blockquote>
+
+          <!-- 正文 - 使用 markstream-vue 流式渲染 -->
+          <div class="markdown-preview">
+            <MarkdownRender
+              :content="aiResult.content"
+              :final="!isProcessing"
+            />
+          </div>
+        </div>
+      </template>
+
+      <!-- 降级：显示原始 AI 输出 -->
+      <div v-else-if="aiMarkdown" class="markdown-preview">
+        <MarkdownRender
+          :content="aiMarkdown"
+          :final="!isProcessing"
+        />
+      </div>
 
       <div v-else class="empty">
         <span>点击「AI 智能整理」开始处理</span>
@@ -168,6 +208,41 @@ const showPromptEditor = ref(false);
   border: none;
   border-radius: 6px;
   cursor: pointer;
+}
+
+/* 结构化结果样式 */
+.ai-result {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.meta-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.category-tag {
+  display: inline-block;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.summary {
+  margin: 0;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-left: 3px solid #007aff;
+  border-radius: 0 6px 6px 0;
+  font-size: 14px;
+  color: #444;
+  line-height: 1.6;
 }
 
 .markdown-preview {

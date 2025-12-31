@@ -1,6 +1,42 @@
 import { ref, computed } from 'vue';
-import { marked } from 'marked';
-import type { ExtractedContent, LLMConfig, Message } from '@/types';
+import type { ExtractedContent, LLMConfig, Message, AIProcessedContent, ArticleCategory } from '@/types';
+
+// 解析 YAML frontmatter
+function parseFrontmatter(text: string): { meta: Partial<AIProcessedContent> | null; content: string; isComplete: boolean } {
+  // 检查是否以 --- 开头
+  if (!text.startsWith('---')) {
+    return { meta: null, content: text, isComplete: false };
+  }
+
+  // 查找第二个 ---
+  const endIndex = text.indexOf('\n---', 3);
+  if (endIndex === -1) {
+    // frontmatter 还未完成
+    return { meta: null, content: '', isComplete: false };
+  }
+
+  // 提取 frontmatter 和正文
+  const frontmatterStr = text.slice(4, endIndex).trim();
+  const content = text.slice(endIndex + 4).trim();
+
+  // 简单解析 YAML（只支持简单的 key: value 格式）
+  const meta: Partial<AIProcessedContent> = {};
+  const lines = frontmatterStr.split('\n');
+
+  for (const line of lines) {
+    const colonIndex = line.indexOf(':');
+    if (colonIndex === -1) continue;
+
+    const key = line.slice(0, colonIndex).trim();
+    const value = line.slice(colonIndex + 1).trim();
+
+    if (key === 'title') meta.title = value;
+    else if (key === 'category') meta.category = value as ArticleCategory;
+    else if (key === 'summary') meta.summary = value;
+  }
+
+  return { meta, content, isComplete: true };
+}
 
 export function useContent() {
   // 状态
@@ -14,26 +50,22 @@ export function useContent() {
   const isPickerMode = ref(false);
   const activeTab = ref<'raw' | 'ai'>('raw');
 
-  // 计算属性
-  const renderedMarkdown = computed(() => {
-    const md = activeTab.value === 'raw' ? rawMarkdown.value : aiMarkdown.value;
-    try {
-      return marked.parse(md) as string;
-    } catch {
-      return md;
-    }
-  });
+  // AI 结构化结果
+  const aiResult = ref<AIProcessedContent | null>(null);
+  // frontmatter 是否已解析
+  const frontmatterParsed = ref(false);
 
+  // 计算属性
   const canProcess = computed(() => {
     return rawMarkdown.value.trim().length > 0 && !isProcessing.value;
   });
 
   const canSave = computed(() => {
-    return (activeTab.value === 'raw' ? rawMarkdown.value : aiMarkdown.value).trim().length > 0;
+    return (activeTab.value === 'raw' ? rawMarkdown.value : (aiResult.value?.content || aiMarkdown.value)).trim().length > 0;
   });
 
   const currentContent = computed(() => {
-    return activeTab.value === 'raw' ? rawMarkdown.value : aiMarkdown.value;
+    return activeTab.value === 'raw' ? rawMarkdown.value : (aiResult.value?.content || aiMarkdown.value);
   });
 
   // 消息处理
@@ -47,9 +79,44 @@ export function useContent() {
         break;
       case 'AI_STREAM_CHUNK':
         aiMarkdown.value += message.data.chunk;
+        // 流式解析 frontmatter
+        if (!frontmatterParsed.value) {
+          const { meta, content, isComplete } = parseFrontmatter(aiMarkdown.value);
+          if (isComplete && meta) {
+            frontmatterParsed.value = true;
+            aiResult.value = {
+              title: meta.title || '',
+              category: meta.category || 'other',
+              summary: meta.summary || '',
+              content: content,
+            };
+            if (meta.title) {
+              title.value = meta.title;
+            }
+          }
+        } else if (aiResult.value) {
+          // frontmatter 已解析，更新正文内容
+          const { content } = parseFrontmatter(aiMarkdown.value);
+          aiResult.value.content = content;
+        }
         break;
       case 'AI_STREAM_END':
         isProcessing.value = false;
+        // 最终解析
+        if (!frontmatterParsed.value) {
+          const { meta, content } = parseFrontmatter(aiMarkdown.value);
+          if (meta) {
+            aiResult.value = {
+              title: meta.title || '',
+              category: meta.category || 'other',
+              summary: meta.summary || '',
+              content: content,
+            };
+            if (meta.title) {
+              title.value = meta.title;
+            }
+          }
+        }
         break;
       case 'AI_ERROR':
         isProcessing.value = false;
@@ -96,6 +163,8 @@ export function useContent() {
     isProcessing.value = true;
     processingError.value = '';
     aiMarkdown.value = '';
+    aiResult.value = null;
+    frontmatterParsed.value = false;
     activeTab.value = 'ai';
 
     browser.runtime.sendMessage({
@@ -115,12 +184,12 @@ export function useContent() {
     title,
     rawMarkdown,
     aiMarkdown,
+    aiResult,
     isProcessing,
     processingError,
     isPickerMode,
     activeTab,
     // 计算属性
-    renderedMarkdown,
     canProcess,
     canSave,
     currentContent,

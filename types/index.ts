@@ -34,10 +34,15 @@ export interface ExtractedContent {
   siteName?: string;
 }
 
-// AI 处理结果
+// 文章分类
+export type ArticleCategory = 'model' | 'tool' | 'product' | 'concept' | 'other';
+
+// AI 处理结果（结构化）
 export interface AIProcessedContent {
-  markdown: string;
-  frontmatter?: Record<string, unknown>;
+  title: string;           // 重新生成的标题
+  category: ArticleCategory;
+  summary: string;         // 50-100 字摘要
+  content: string;         // 整理后的正文 Markdown
 }
 
 // 消息类型
