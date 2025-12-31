@@ -1,8 +1,8 @@
 {
-  "name": "wxt-vue-starter",
-  "description": "manifest.json description",
+  "name": "obsiclip",
+  "description": "智能网页剪藏到 Obsidian - AI 赋能的知识管理助手",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",
@@ -15,12 +15,17 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
-    "vue": "^3.5.25"
+    "vue": "^3.5.25",
+    "@mozilla/readability": "^0.5.0",
+    "turndown": "^7.2.0",
+    "marked": "^15.0.6",
+    "highlight.js": "^11.11.1"
   },
   "devDependencies": {
     "@wxt-dev/module-vue": "^1.0.3",
     "typescript": "^5.9.3",
     "vue-tsc": "^3.1.8",
-    "wxt": "^0.20.6"
+    "wxt": "^0.20.6",
+    "@types/turndown": "^5.0.5"
   }
 }
