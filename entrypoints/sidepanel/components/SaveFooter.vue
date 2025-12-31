@@ -40,20 +40,20 @@ function handleCopyHtml() {
 
 <template>
   <footer class="footer">
-    <div class="save-row">
-      <div class="folder-field">
-        <label class="folder-label">文件夹</label>
-        <input
-          :value="folder"
-          @input="emit('update:folder', ($event.target as HTMLInputElement).value)"
-          class="folder-input"
-          list="recent-paths"
-        />
-        <datalist id="recent-paths">
-          <option v-for="path in recentPaths" :key="path" :value="path" />
-        </datalist>
-      </div>
+    <div class="folder-row">
+      <label class="folder-label">文件夹/类别</label>
+      <input
+        :value="folder"
+        @input="emit('update:folder', ($event.target as HTMLInputElement).value)"
+        class="folder-input"
+        list="recent-paths"
+      />
+      <datalist id="recent-paths">
+        <option v-for="path in recentPaths" :key="path" :value="path" />
+      </datalist>
+    </div>
 
+    <div class="save-row">
       <div class="save-btn-group">
         <button class="save-btn primary" @click="handleSaveToObsidian" :disabled="!canSave">
           保存到 Obsidian
@@ -77,19 +77,15 @@ function handleCopyHtml() {
   padding: 12px;
   border-top: 1px solid #e0e0e0;
   background: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.save-row {
+.folder-row {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.folder-field {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .folder-label {
@@ -104,6 +100,7 @@ function handleCopyHtml() {
   border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 13px;
+  min-width: 0;
 }
 
 .folder-input:focus {
@@ -111,9 +108,14 @@ function handleCopyHtml() {
   border-color: #007aff;
 }
 
+.save-row {
+  display: flex;
+}
+
 .save-btn-group {
   position: relative;
   display: flex;
+  flex: 1;
 }
 
 .save-btn {
@@ -126,6 +128,7 @@ function handleCopyHtml() {
 }
 
 .save-btn.primary {
+  flex: 1;
   background: #007aff;
   color: #fff;
   border-color: #007aff;

@@ -3,16 +3,30 @@ defineProps<{
   rawMarkdown: string;
   canProcess: boolean;
   hasApiKey: boolean;
+  refreshing?: boolean;
 }>();
 
 const emit = defineEmits<{
   'update:rawMarkdown': [value: string];
   processWithAI: [];
+  refresh: [];
 }>();
 </script>
 
 <template>
   <div class="tab-content">
+    <div class="editor-header">
+      <button
+        class="refresh-btn"
+        @click="emit('refresh')"
+        :disabled="refreshing"
+        title="重新检测页面内容"
+      >
+        <span :class="{ spinning: refreshing }">🔄</span>
+        重新检测
+      </button>
+    </div>
+
     <textarea
       :value="rawMarkdown"
       @input="emit('update:rawMarkdown', ($event.target as HTMLTextAreaElement).value)"
@@ -34,6 +48,47 @@ const emit = defineEmits<{
   flex-direction: column;
   padding: 12px;
   overflow: hidden;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 8px;
+}
+
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  background: #e8e8e8;
+  color: #333;
+}
+
+.refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.refresh-btn .spinning {
+  display: inline-block;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .markdown-editor {

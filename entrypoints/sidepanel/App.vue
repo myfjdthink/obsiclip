@@ -10,6 +10,7 @@ import SaveFooter from './components/SaveFooter.vue';
 
 // 视图状态
 const showSettings = ref(false);
+const refreshing = ref(false);
 
 // Composables
 const settings = useSettings();
@@ -27,11 +28,7 @@ const obsidian = useObsidian({
 // 初始化
 onMounted(async () => {
   try {
-    const loadedSettings = await settings.loadSettings();
-    if (!loadedSettings.llm.apiKey) {
-      showSettings.value = true;
-    }
-
+    await settings.loadSettings();
     browser.runtime.onMessage.addListener(content.handleMessage);
     await content.extractContent();
   } catch (error) {
@@ -69,6 +66,16 @@ function handleSaveSettings() {
   settings.handleSaveSettings(() => {
     showSettings.value = false;
   });
+}
+
+// 刷新内容
+async function handleRefresh() {
+  refreshing.value = true;
+  try {
+    await content.extractContent();
+  } finally {
+    refreshing.value = false;
+  }
 }
 </script>
 
@@ -140,7 +147,9 @@ function handleSaveSettings() {
           v-model:rawMarkdown="content.rawMarkdown.value"
           :canProcess="content.canProcess.value"
           :hasApiKey="settings.hasApiKey.value"
+          :refreshing="refreshing"
           @processWithAI="handleProcessWithAI"
+          @refresh="handleRefresh"
         />
 
         <AiPreviewTab
