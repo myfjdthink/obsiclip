@@ -54,43 +54,59 @@ const DEFAULT_SETTINGS: UserSettings = {
   recentPaths: [],
 };
 
-// 加密密钥（用于本地加密，非安全存储）
-const ENCRYPTION_KEY = 'obsiclip-local-key';
+// 加密密钥（16 字节 = 128 位，用于 AES-128-GCM）
+const ENCRYPTION_KEY = 'obsiclip-key1234';
 
 // 简单的加密函数（用于 API Key 本地存储）
 async function encrypt(text: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(text);
-  const keyData = encoder.encode(ENCRYPTION_KEY);
+  if (!text) return '';
 
-  const key = await crypto.subtle.importKey(
-    'raw',
-    keyData,
-    { name: 'AES-GCM', length: 128 },
-    false,
-    ['encrypt']
-  );
+  try {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text);
+    const keyData = encoder.encode(ENCRYPTION_KEY);
 
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const encrypted = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv },
-    key,
-    data
-  );
+    const key = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'AES-GCM' },
+      false,
+      ['encrypt']
+    );
 
-  const combined = new Uint8Array(iv.length + encrypted.byteLength);
-  combined.set(iv);
-  combined.set(new Uint8Array(encrypted), iv.length);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encrypted = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      key,
+      data
+    );
 
-  return btoa(String.fromCharCode(...combined));
+    const combined = new Uint8Array(iv.length + encrypted.byteLength);
+    combined.set(iv);
+    combined.set(new Uint8Array(encrypted), iv.length);
+
+    return btoa(String.fromCharCode(...combined));
+  } catch (e) {
+    console.error('加密失败:', e);
+    // 如果加密失败，返回 base64 编码的原文（降级方案）
+    return btoa(unescape(encodeURIComponent(text)));
+  }
 }
 
 // 解密函数
 async function decrypt(encryptedText: string): Promise<string> {
+  if (!encryptedText) return '';
+
   try {
     const combined = new Uint8Array(
       atob(encryptedText).split('').map(c => c.charCodeAt(0))
     );
+
+    // 检查是否是加密数据（至少需要 12 字节 IV + 一些数据）
+    if (combined.length < 28) {
+      // 可能是 base64 降级数据，尝试直接解码
+      return decodeURIComponent(escape(atob(encryptedText)));
+    }
 
     const iv = combined.slice(0, 12);
     const data = combined.slice(12);
@@ -101,7 +117,7 @@ async function decrypt(encryptedText: string): Promise<string> {
     const key = await crypto.subtle.importKey(
       'raw',
       keyData,
-      { name: 'AES-GCM', length: 128 },
+      { name: 'AES-GCM' },
       false,
       ['decrypt']
     );
@@ -114,7 +130,12 @@ async function decrypt(encryptedText: string): Promise<string> {
 
     return new TextDecoder().decode(decrypted);
   } catch {
-    return '';
+    // 解密失败，尝试 base64 解码
+    try {
+      return decodeURIComponent(escape(atob(encryptedText)));
+    } catch {
+      return '';
+    }
   }
 }
 
