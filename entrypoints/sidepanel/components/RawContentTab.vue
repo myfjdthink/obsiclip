@@ -1,27 +1,18 @@
 <script lang="ts" setup>
 defineProps<{
   rawMarkdown: string;
-  isPickerMode: boolean;
   canProcess: boolean;
   hasApiKey: boolean;
 }>();
 
 const emit = defineEmits<{
   'update:rawMarkdown': [value: string];
-  togglePickerMode: [];
   processWithAI: [];
 }>();
 </script>
 
 <template>
   <div class="tab-content">
-    <div class="toolbar">
-      <label class="picker-toggle">
-        <input type="checkbox" :checked="isPickerMode" @change="emit('togglePickerMode')" />
-        <span>手动调整选区</span>
-      </label>
-    </div>
-
     <textarea
       :value="rawMarkdown"
       @input="emit('update:rawMarkdown', ($event.target as HTMLTextAreaElement).value)"
@@ -43,23 +34,6 @@ const emit = defineEmits<{
   flex-direction: column;
   padding: 12px;
   overflow: hidden;
-}
-
-.toolbar {
-  margin-bottom: 12px;
-}
-
-.picker-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: #666;
-  cursor: pointer;
-}
-
-.picker-toggle input {
-  cursor: pointer;
 }
 
 .markdown-editor {

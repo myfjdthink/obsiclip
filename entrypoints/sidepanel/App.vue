@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useSettings } from './composables/useSettings';
 import { useContent } from './composables/useContent';
 import { useObsidian } from './composables/useObsidian';
@@ -53,6 +53,16 @@ function handleProcessWithAI() {
     settings.promptModified.value
   );
 }
+
+// 监听 AI 结果，自动填写文件夹路径（直接使用 AI 返回的 category）
+watch(
+  () => content.aiResult.value?.category,
+  (category) => {
+    if (category) {
+      settings.folder.value = category;
+    }
+  }
+);
 
 // 保存设置成功后关闭面板
 function handleSaveSettings() {
@@ -128,10 +138,8 @@ function handleSaveSettings() {
         <RawContentTab
           v-if="content.activeTab.value === 'raw'"
           v-model:rawMarkdown="content.rawMarkdown.value"
-          :isPickerMode="content.isPickerMode.value"
           :canProcess="content.canProcess.value"
           :hasApiKey="settings.hasApiKey.value"
-          @togglePickerMode="content.togglePickerMode"
           @processWithAI="handleProcessWithAI"
         />
 
@@ -151,7 +159,6 @@ function handleSaveSettings() {
       <!-- 底部保存区 -->
       <SaveFooter
         v-model:folder="settings.folder.value"
-        v-model:tags="settings.tags.value"
         :recentPaths="settings.recentPaths.value"
         :canSave="content.canSave.value"
         @saveToObsidian="obsidian.saveToObsidian"

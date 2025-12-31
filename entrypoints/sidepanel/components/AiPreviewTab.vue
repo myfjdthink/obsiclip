@@ -1,18 +1,10 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, watch, nextTick } from 'vue';
 import MarkdownRender from 'markstream-vue';
 import 'markstream-vue/index.css';
 import type { AIProcessedContent } from '@/types';
 
-const CATEGORY_LABELS: Record<string, string> = {
-  model: '🤖 模型',
-  tool: '🔧 工具',
-  product: '📦 产品',
-  concept: '💡 概念',
-  other: '📄 其他',
-};
-
-defineProps<{
+const props = defineProps<{
   currentPrompt: string;
   promptModified: boolean;
   isProcessing: boolean;
@@ -28,6 +20,19 @@ const emit = defineEmits<{
 }>();
 
 const showPromptEditor = ref(false);
+const previewAreaRef = ref<HTMLElement | null>(null);
+
+// 流式渲染时自动滚动到底部
+watch(
+  () => props.aiResult?.content,
+  () => {
+    if (props.isProcessing && previewAreaRef.value) {
+      nextTick(() => {
+        previewAreaRef.value!.scrollTop = previewAreaRef.value!.scrollHeight;
+      });
+    }
+  }
+);
 </script>
 
 <template>
@@ -57,8 +62,8 @@ const showPromptEditor = ref(false);
     </div>
 
     <!-- 预览区 -->
-    <div class="preview-area">
-      <div v-if="isProcessing" class="processing">
+    <div ref="previewAreaRef" class="preview-area">
+      <div v-if="isProcessing && !aiResult" class="processing">
         <div class="spinner"></div>
         <span>AI 正在整理...</span>
       </div>
@@ -73,7 +78,7 @@ const showPromptEditor = ref(false);
         <div class="ai-result">
           <!-- 元信息 -->
           <div class="meta-info">
-            <span class="category-tag">{{ CATEGORY_LABELS[aiResult.category] || aiResult.category }}</span>
+            <span class="category-tag">{{ aiResult.category }}</span>
           </div>
 
           <!-- 摘要 -->

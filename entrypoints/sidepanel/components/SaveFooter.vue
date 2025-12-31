@@ -3,14 +3,12 @@ import { ref } from 'vue';
 
 defineProps<{
   folder: string;
-  tags: string;
   recentPaths: string[];
   canSave: boolean;
 }>();
 
 const emit = defineEmits<{
   'update:folder': [value: string];
-  'update:tags': [value: string];
   saveToObsidian: [];
   downloadAsMd: [];
   copyMd: [];
@@ -42,26 +40,20 @@ function handleCopyHtml() {
 
 <template>
   <footer class="footer">
-    <div class="save-config">
-      <input
-        :value="folder"
-        @input="emit('update:folder', ($event.target as HTMLInputElement).value)"
-        placeholder="文件夹路径"
-        class="config-input"
-        list="recent-paths"
-      />
-      <datalist id="recent-paths">
-        <option v-for="path in recentPaths" :key="path" :value="path" />
-      </datalist>
-      <input
-        :value="tags"
-        @input="emit('update:tags', ($event.target as HTMLInputElement).value)"
-        placeholder="标签（逗号分隔）"
-        class="config-input"
-      />
-    </div>
+    <div class="save-row">
+      <div class="folder-field">
+        <label class="folder-label">文件夹</label>
+        <input
+          :value="folder"
+          @input="emit('update:folder', ($event.target as HTMLInputElement).value)"
+          class="folder-input"
+          list="recent-paths"
+        />
+        <datalist id="recent-paths">
+          <option v-for="path in recentPaths" :key="path" :value="path" />
+        </datalist>
+      </div>
 
-    <div class="save-actions">
       <div class="save-btn-group">
         <button class="save-btn primary" @click="handleSaveToObsidian" :disabled="!canSave">
           保存到 Obsidian
@@ -87,14 +79,26 @@ function handleCopyHtml() {
   background: #f8f9fa;
 }
 
-.save-config {
+.save-row {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 8px;
-  margin-bottom: 12px;
 }
 
-.config-input {
+.folder-field {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.folder-label {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.folder-input {
   flex: 1;
   padding: 8px 12px;
   border: 1px solid #ddd;
@@ -102,14 +106,9 @@ function handleCopyHtml() {
   font-size: 13px;
 }
 
-.config-input:focus {
+.folder-input:focus {
   outline: none;
   border-color: #007aff;
-}
-
-.save-actions {
-  display: flex;
-  justify-content: flex-end;
 }
 
 .save-btn-group {
