@@ -56,7 +56,8 @@ export type MessageType =
   | 'HIGHLIGHT_SELECTION'
   | 'CLEAR_HIGHLIGHT'
   | 'TOGGLE_PICKER_MODE'
-  | 'SELECTION_UPDATED';
+  | 'SELECTION_UPDATED'
+  | 'OPEN_OBSIDIAN_URL';
 
 // 消息基础结构
 export interface BaseMessage {
@@ -115,6 +116,13 @@ export interface SelectionUpdatedMessage extends BaseMessage {
   };
 }
 
+export interface OpenObsidianUrlMessage extends BaseMessage {
+  type: 'OPEN_OBSIDIAN_URL';
+  data: {
+    url: string;
+  };
+}
+
 export type Message =
   | ExtractContentMessage
   | ContentExtractedMessage
@@ -123,4 +131,5 @@ export type Message =
   | AIStreamEndMessage
   | AIErrorMessage
   | TogglePickerModeMessage
-  | SelectionUpdatedMessage;
+  | SelectionUpdatedMessage
+  | OpenObsidianUrlMessage;

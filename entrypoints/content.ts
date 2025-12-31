@@ -43,8 +43,8 @@ function handleExtractContent(sendResponse: (response: ContentExtractedMessage) 
   const content = extractContent(document, window.location.href);
 
   if (content) {
-    // 显示自动提取的高亮
-    showAutoExtractHighlight(content);
+    // 暂时禁用自动提取的高亮遮罩
+    // showAutoExtractHighlight(content);
 
     sendResponse({
       type: 'CONTENT_EXTRACTED',

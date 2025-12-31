@@ -6,21 +6,21 @@ export function buildObsidianURI(
   title: string,
   content: string
 ): string {
-  const params = new URLSearchParams();
-
-  if (config.vault) {
-    params.set('vault', config.vault);
-  }
-
   // 构建文件路径
   const filePath = config.folder
     ? `${config.folder}/${sanitizeFileName(title)}`
     : sanitizeFileName(title);
 
-  params.set('file', filePath);
-  params.set('content', content);
+  // 手动构建 URL，使用 encodeURIComponent 确保空格编码为 %20 而不是 +
+  let url = `obsidian://new?file=${encodeURIComponent(filePath)}`;
 
-  return `obsidian://new?${params.toString()}`;
+  if (config.vault) {
+    url += `&vault=${encodeURIComponent(config.vault)}`;
+  }
+
+  url += `&content=${encodeURIComponent(content)}`;
+
+  return url;
 }
 
 // 清理文件名（移除不合法字符）
@@ -59,7 +59,15 @@ export function generateFrontmatter(
 
 // 打开 Obsidian
 export function openObsidian(uri: string): void {
-  window.open(uri, '_blank');
+  // 通过 background script 打开 Obsidian URL
+  browser.runtime.sendMessage({
+    type: 'OPEN_OBSIDIAN_URL',
+    data: { url: uri },
+  }).catch((error) => {
+    console.error('Error sending message to open Obsidian:', error);
+    // 回退方案：尝试直接打开
+    window.open(uri, '_blank');
+  });
 }
 
 // 下载为 .md 文件

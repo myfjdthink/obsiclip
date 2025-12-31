@@ -1,6 +1,6 @@
 import { getLLMConfig, getUserPrompt, buildFinalPrompt } from '@/utils/storage';
 import { streamChatCompletion } from '@/utils/llm';
-import type { Message, AIProcessMessage } from '@/types';
+import type { Message, AIProcessMessage, OpenObsidianUrlMessage } from '@/types';
 
 export default defineBackground(() => {
   // 点击扩展图标时打开侧边栏
@@ -26,6 +26,20 @@ export default defineBackground(() => {
     if (message.type === 'AI_PROCESS') {
       handleAIProcess(message as AIProcessMessage, sender);
       return true;
+    }
+
+    if (message.type === 'OPEN_OBSIDIAN_URL') {
+      const { url } = (message as OpenObsidianUrlMessage).data;
+      // 查询当前活动标签页，然后在该标签页打开 Obsidian URL
+      browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
+        const currentTab = tabs[0];
+        if (currentTab?.id) {
+          browser.tabs.update(currentTab.id, { url }).catch((error) => {
+            console.error('Error opening Obsidian URL:', error);
+          });
+        }
+      }).catch(console.error);
+      return false;
     }
   });
 
