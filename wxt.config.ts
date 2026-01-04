@@ -10,7 +10,6 @@ export default defineConfig({
     permissions: [
       'activeTab',
       'storage',
-      'sidePanel',
       'scripting',
     ],
     host_permissions: [
@@ -20,11 +19,9 @@ export default defineConfig({
       'https://api.deepseek.com/*',
       '<all_urls>',
     ],
-    side_panel: {
-      default_path: 'sidepanel.html',
-    },
     action: {
       default_title: 'ObsiClip',
+      default_popup: 'popup.html',
     },
   },
 });

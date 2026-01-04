@@ -241,24 +241,23 @@ const providerNames: Record<LLMProvider, string> = {
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .header h1 {
   font-size: 24px;
   margin-bottom: 24px;
-  color: #333;
+  color: var(--text-normal);
 }
 
 .loading {
   text-align: center;
   padding: 40px;
-  color: #666;
+  color: var(--text-muted);
 }
 
 .section {
-  background: #fff;
-  border: 1px solid #e0e0e0;
+  background: var(--background-primary);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 20px;
@@ -267,11 +266,11 @@ const providerNames: Record<LLMProvider, string> = {
 .section h2 {
   font-size: 18px;
   margin: 0 0 16px 0;
-  color: #333;
+  color: var(--text-normal);
 }
 
 .description {
-  color: #666;
+  color: var(--text-muted);
   font-size: 14px;
   margin-bottom: 12px;
 }
@@ -284,30 +283,32 @@ const providerNames: Record<LLMProvider, string> = {
   display: block;
   font-weight: 500;
   margin-bottom: 6px;
-  color: #333;
+  color: var(--text-normal);
 }
 
 .form-group input,
 .form-group select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   font-size: 14px;
   box-sizing: border-box;
+  background: var(--background-primary);
+  color: var(--text-normal);
 }
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #007aff;
+  border-color: var(--interactive-accent);
   box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
 }
 
 .hint {
   display: block;
   font-size: 12px;
-  color: #888;
+  color: var(--text-muted);
   margin-top: 4px;
 }
 
@@ -319,16 +320,17 @@ const providerNames: Record<LLMProvider, string> = {
 
 button {
   padding: 10px 20px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
-  background: #fff;
+  background: var(--background-primary);
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
+  color: var(--text-normal);
 }
 
 button:hover:not(:disabled) {
-  background: #f5f5f5;
+  background: var(--background-secondary);
 }
 
 button:disabled {
@@ -337,9 +339,9 @@ button:disabled {
 }
 
 button.primary {
-  background: #007aff;
+  background: var(--interactive-accent);
   color: #fff;
-  border-color: #007aff;
+  border-color: var(--interactive-accent);
 }
 
 button.primary:hover:not(:disabled) {
@@ -381,17 +383,19 @@ button.primary:hover:not(:disabled) {
 .prompt-editor textarea {
   width: 100%;
   padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   font-size: 13px;
   font-family: 'SF Mono', Monaco, Consolas, monospace;
   line-height: 1.5;
   resize: vertical;
   box-sizing: border-box;
+  background: var(--background-primary);
+  color: var(--text-normal);
 }
 
 .prompt-editor textarea:focus {
   outline: none;
-  border-color: #007aff;
+  border-color: var(--interactive-accent);
 }
 </style>

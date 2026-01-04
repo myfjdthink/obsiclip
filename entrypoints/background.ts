@@ -3,24 +3,6 @@ import { streamChatCompletion } from '@/utils/llm';
 import type { Message, AIProcessMessage, OpenObsidianUrlMessage } from '@/types';
 
 export default defineBackground(() => {
-  // 点击扩展图标时打开侧边栏
-  browser.action.onClicked.addListener(async (tab) => {
-    if (tab.id) {
-      // 打开侧边栏
-      await browser.sidePanel.open({ tabId: tab.id });
-
-      // 注入 content script（如果还没注入）
-      try {
-        await browser.scripting.executeScript({
-          target: { tabId: tab.id },
-          files: ['content-scripts/content.js'],
-        });
-      } catch {
-        // 可能已经注入，忽略错误
-      }
-    }
-  });
-
   // 监听消息
   browser.runtime.onMessage.addListener((message: Message, sender, sendResponse) => {
     if (message.type === 'AI_PROCESS') {
@@ -42,9 +24,6 @@ export default defineBackground(() => {
       return false;
     }
   });
-
-  // 设置侧边栏行为
-  browser.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 });
 
 // 处理 AI 请求
@@ -63,7 +42,7 @@ async function handleAIProcess(message: AIProcessMessage, sender: browser.runtim
   try {
     // 流式处理
     for await (const chunk of streamChatCompletion(config, systemPrompt, content)) {
-      // 发送 chunk 到侧边栏
+      // 发送 chunk 到 popup
       browser.runtime.sendMessage({
         type: 'AI_STREAM_CHUNK',
         data: { chunk },

@@ -56,7 +56,13 @@ watch(
           @click="emit('regenerate')"
           :disabled="isProcessing"
         >
-          🔄 重新生成
+          <svg class="btn-icon" viewBox="0 0 24 24">
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+            <path d="M16 16h5v5" />
+          </svg>
+          重新生成
         </button>
       </div>
     </div>
@@ -69,7 +75,7 @@ watch(
       </div>
 
       <div v-else-if="processingError" class="error">
-        <span>❌ {{ processingError }}</span>
+        <span>{{ processingError }}</span>
         <button @click="emit('retry')">重试</button>
       </div>
 
@@ -116,17 +122,17 @@ watch(
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 12px;
+  padding: var(--popup-padding);
   overflow: hidden;
 }
 
 .prompt-section {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .prompt-toggle {
-  font-size: 13px;
-  color: #666;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -134,45 +140,60 @@ watch(
 }
 
 .prompt-toggle:hover {
-  color: #007aff;
+  color: var(--interactive-accent);
 }
 
 .prompt-editor {
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .prompt-editor textarea {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  font-size: 12px;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-s);
+  font-size: var(--font-ui-smaller);
   font-family: inherit;
   resize: vertical;
   box-sizing: border-box;
+  background: var(--background-primary);
+  color: var(--text-normal);
 }
 
 .regenerate-btn {
-  margin-top: 8px;
-  padding: 8px 16px;
-  background: #007aff;
+  margin-top: 6px;
+  padding: 6px 12px;
+  background: var(--interactive-accent);
   color: #fff;
   border: none;
-  border-radius: 6px;
-  font-size: 13px;
+  border-radius: var(--radius-s);
+  font-size: var(--font-ui-smaller);
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .regenerate-btn:disabled {
   opacity: 0.5;
 }
 
+.btn-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .preview-area {
   flex: 1;
   overflow: auto;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-m);
+  padding: 12px;
 }
 
 .processing,
@@ -183,15 +204,16 @@ watch(
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  color: #666;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
 }
 
 .spinner {
-  width: 24px;
-  height: 24px;
-  border: 2px solid #e0e0e0;
-  border-top-color: #007aff;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--interactive-accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -203,16 +225,17 @@ watch(
 }
 
 .error {
-  color: #dc3545;
+  color: hsl(353, 81%, 55%);
 }
 
 .error button {
-  padding: 8px 16px;
-  background: #dc3545;
+  padding: 6px 12px;
+  background: hsl(353, 81%, 55%);
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-s);
   cursor: pointer;
+  font-size: var(--font-ui-smaller);
 }
 
 /* 结构化结果样式 */
