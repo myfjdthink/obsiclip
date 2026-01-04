@@ -144,12 +144,13 @@ async function handleRefresh() {
 
 <style scoped>
 .popup {
-  width: 380px;
-  height: 520px;
+  width: var(--popup-width);
+  height: var(--popup-height);
   display: flex;
   flex-direction: column;
-  background: var(--background-primary, #fff);
-  color: var(--text-normal, #1a1a1a);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  overflow: hidden;
 }
 
 .tabs {

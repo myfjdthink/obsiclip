@@ -242,64 +242,64 @@ watch(
 .ai-result {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .meta-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .category-tag {
   display: inline-block;
-  padding: 4px 10px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2px 8px;
+  background: var(--interactive-accent);
   color: #fff;
-  border-radius: 12px;
-  font-size: 12px;
+  border-radius: 10px;
+  font-size: var(--font-ui-smaller);
   font-weight: 500;
 }
 
 .summary {
   margin: 0;
-  padding: 12px 16px;
-  background: #f8f9fa;
-  border-left: 3px solid #007aff;
-  border-radius: 0 6px 6px 0;
-  font-size: 14px;
-  color: #444;
-  line-height: 1.6;
+  padding: 10px 12px;
+  background: var(--background-secondary);
+  border-left: 3px solid var(--interactive-accent);
+  border-radius: 0 var(--radius-s) var(--radius-s) 0;
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+  line-height: 1.5;
 }
 
 .markdown-preview {
-  font-size: 14px;
-  line-height: 1.7;
+  font-size: var(--font-ui-small);
+  line-height: 1.6;
 }
 
 .markdown-preview :deep(h1),
 .markdown-preview :deep(h2),
 .markdown-preview :deep(h3) {
-  margin: 1em 0 0.5em;
+  margin: 0.8em 0 0.4em;
 }
 
 .markdown-preview :deep(pre) {
-  background: #f5f5f5;
-  padding: 12px;
-  border-radius: 6px;
+  background: var(--background-secondary);
+  padding: 10px;
+  border-radius: var(--radius-s);
   overflow-x: auto;
 }
 
 .markdown-preview :deep(code) {
-  font-family: 'SF Mono', Monaco, Consolas, monospace;
-  font-size: 13px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: var(--font-ui-smaller);
 }
 
 .markdown-preview :deep(blockquote) {
-  border-left: 3px solid #007aff;
-  padding-left: 12px;
-  color: #666;
-  margin: 1em 0;
+  border-left: 3px solid var(--interactive-accent);
+  padding-left: 10px;
+  color: var(--text-muted);
+  margin: 0.8em 0;
 }
 </style>
