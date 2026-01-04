@@ -35,13 +35,20 @@ const suggestedModels = computed(() => {
 
 const isCustomProvider = computed(() => provider.value === 'custom');
 
-// 监听 provider 变化，自动填充 baseUrl
-watch(provider, (newProvider) => {
+// 监听 provider 变化，自动填充 baseUrl 和 model
+watch(provider, (newProvider, oldProvider) => {
   const preset = PROVIDER_PRESETS[newProvider];
-  if (preset && preset.baseUrl) {
-    baseUrl.value = preset.baseUrl;
-    if (preset.models.length > 0 && !model.value) {
+  if (preset) {
+    // 更新 baseUrl
+    if (preset.baseUrl) {
+      baseUrl.value = preset.baseUrl;
+    }
+    // 切换服务商时，自动选择第一个推荐模型
+    if (preset.models.length > 0) {
       model.value = preset.models[0];
+    } else if (newProvider === 'custom') {
+      // 自定义服务商时清空模型，让用户自己输入
+      model.value = '';
     }
   }
 });

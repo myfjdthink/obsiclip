@@ -113,8 +113,10 @@ async function handleRefresh() {
         :canProcess="content.canProcess.value"
         :hasApiKey="settings.hasApiKey.value"
         :refreshing="refreshing"
+        :canSave="content.canSave.value"
         @processWithAI="handleProcessWithAI"
         @refresh="handleRefresh"
+        @directSave="obsidian.saveToObsidian"
       />
 
       <AiPreviewTab
@@ -131,9 +133,11 @@ async function handleRefresh() {
     </main>
 
     <SaveFooter
+      v-if="content.activeTab.value === 'ai'"
       v-model:folder="settings.folder.value"
       :recentPaths="settings.recentPaths.value"
       :canSave="content.canSave.value"
+      :isProcessing="content.isProcessing.value"
       @saveToObsidian="obsidian.saveToObsidian"
       @downloadAsMd="obsidian.downloadAsMd"
       @copyMd="obsidian.copyMd"

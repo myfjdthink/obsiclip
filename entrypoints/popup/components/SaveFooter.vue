@@ -5,6 +5,7 @@ defineProps<{
   folder: string;
   recentPaths: string[];
   canSave: boolean;
+  isProcessing?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -55,10 +56,10 @@ function handleCopyHtml() {
 
     <div class="save-row">
       <div class="save-btn-group">
-        <button class="save-btn primary" @click="handleSaveToObsidian" :disabled="!canSave">
+        <button class="save-btn primary" @click="handleSaveToObsidian" :disabled="!canSave || isProcessing">
           保存到 Obsidian
         </button>
-        <button class="save-btn dropdown-toggle" @click="showSaveMenu = !showSaveMenu">
+        <button class="save-btn dropdown-toggle" @click="showSaveMenu = !showSaveMenu" :disabled="isProcessing">
           ▼
         </button>
 
@@ -151,6 +152,11 @@ function handleCopyHtml() {
   color: #fff;
   border-left: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 0 var(--radius-s) var(--radius-s) 0;
+}
+
+.save-btn.dropdown-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .save-menu {
