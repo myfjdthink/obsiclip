@@ -52,7 +52,6 @@ export default {
     tabs: {
       ai: 'AI Config',
       prompt: 'Prompt Config',
-      save: 'Save Config',
       general: 'General',
     },
 
@@ -105,6 +104,8 @@ export default {
       desc: 'Configure general extension options',
       language: 'Interface Language',
       languageDesc: 'Select the display language for the extension',
+      backgroundAI: 'AI Background Processing',
+      backgroundAIDesc: 'When enabled, AI processing runs in the background without waiting, and won\'t be interrupted when switching pages',
     },
 
     // Provider names
@@ -121,5 +122,15 @@ export default {
   languages: {
     'zh-CN': '简体中文',
     en: 'English',
+  },
+
+  // Progress notifications
+  progress: {
+    preparing: 'Preparing...',
+    extracting: 'Extracting page content...',
+    aiProcessing: 'AI is processing content...',
+    parsing: 'Parsing results...',
+    success: 'Clipped successfully! Opening Obsidian...',
+    failed: 'Failed',
   },
 };

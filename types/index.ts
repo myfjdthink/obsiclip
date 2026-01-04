@@ -56,6 +56,7 @@ export type MessageType =
   | 'EXTRACT_CONTENT'
   | 'CONTENT_EXTRACTED'
   | 'AI_PROCESS'
+  | 'AI_PROCESS_BACKGROUND'
   | 'AI_STREAM_CHUNK'
   | 'AI_STREAM_END'
   | 'AI_ERROR'
@@ -63,7 +64,10 @@ export type MessageType =
   | 'CLEAR_HIGHLIGHT'
   | 'TOGGLE_PICKER_MODE'
   | 'SELECTION_UPDATED'
-  | 'OPEN_OBSIDIAN_URL';
+  | 'OPEN_OBSIDIAN_URL'
+  | 'PROGRESS_SHOW'
+  | 'PROGRESS_UPDATE'
+  | 'PROGRESS_HIDE';
 
 // 消息基础结构
 export interface BaseMessage {
@@ -86,6 +90,19 @@ export interface AIProcessMessage extends BaseMessage {
     content: string;
     prompt: string;
     config: LLMConfig;
+  };
+}
+
+export interface AIProcessBackgroundMessage extends BaseMessage {
+  type: 'AI_PROCESS_BACKGROUND';
+  data: {
+    content: string;
+    prompt: string;
+    config: LLMConfig;
+    title: string;
+    url: string;
+    author?: string;
+    folder: string;
   };
 }
 
@@ -129,13 +146,33 @@ export interface OpenObsidianUrlMessage extends BaseMessage {
   };
 }
 
+export interface ProgressShowMessage extends BaseMessage {
+  type: 'PROGRESS_SHOW';
+}
+
+export interface ProgressUpdateMessage extends BaseMessage {
+  type: 'PROGRESS_UPDATE';
+  data: {
+    progress: number;
+    text: string;
+  };
+}
+
+export interface ProgressHideMessage extends BaseMessage {
+  type: 'PROGRESS_HIDE';
+}
+
 export type Message =
   | ExtractContentMessage
   | ContentExtractedMessage
   | AIProcessMessage
+  | AIProcessBackgroundMessage
   | AIStreamChunkMessage
   | AIStreamEndMessage
   | AIErrorMessage
   | TogglePickerModeMessage
   | SelectionUpdatedMessage
-  | OpenObsidianUrlMessage;
+  | OpenObsidianUrlMessage
+  | ProgressShowMessage
+  | ProgressUpdateMessage
+  | ProgressHideMessage;

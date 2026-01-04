@@ -52,7 +52,6 @@ export default {
     tabs: {
       ai: 'AI 配置',
       prompt: 'Prompt 配置',
-      save: '保存配置',
       general: '通用设置',
     },
 
@@ -105,6 +104,8 @@ export default {
       desc: '配置扩展的通用选项',
       language: '界面语言',
       languageDesc: '选择扩展界面显示的语言',
+      backgroundAI: 'AI 后台自动整理',
+      backgroundAIDesc: '开启后，点击 AI 整理会在后台完成任务，无需等待，切换页面也不会中断',
     },
 
     // 服务商名称
@@ -121,5 +122,15 @@ export default {
   languages: {
     'zh-CN': '简体中文',
     en: 'English',
+  },
+
+  // 进度通知
+  progress: {
+    preparing: '正在准备...',
+    extracting: '正在提取页面内容...',
+    aiProcessing: 'AI 正在整理内容...',
+    parsing: '正在解析结果...',
+    success: '剪藏成功！正在打开 Obsidian...',
+    failed: '失败',
   },
 };

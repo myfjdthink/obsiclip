@@ -1,5 +1,158 @@
 import { extractContent, elementsToMarkdown } from '@/utils/extractor';
-import type { ExtractedContent, Message, ContentExtractedMessage, SelectionUpdatedMessage } from '@/types';
+import type { ExtractedContent, Message, ContentExtractedMessage, SelectionUpdatedMessage, ProgressUpdateMessage } from '@/types';
+
+// 进度 UI 相关
+let progressHost: HTMLDivElement | null = null;
+
+// 创建进度浮窗（Shadow DOM 隔离）
+function createProgressPanel() {
+  if (document.getElementById('obsiclip-progress-root')) return;
+
+  // 创建宿主元素
+  const host = document.createElement('div');
+  host.id = 'obsiclip-progress-root';
+  host.style.cssText = `
+    position: fixed;
+    z-index: 2147483647;
+    bottom: 20px;
+    right: 20px;
+    width: 0;
+    height: 0;
+  `;
+  document.body.appendChild(host);
+  progressHost = host;
+
+  // 创建 Shadow DOM
+  const shadow = host.attachShadow({ mode: 'open' });
+
+  // 注入样式
+  const style = document.createElement('style');
+  style.textContent = `
+    .card {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 280px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 16px;
+      display: none;
+      border: 1px solid #eee;
+    }
+    .card.visible {
+      display: block;
+      animation: slideIn 0.3s ease;
+    }
+    .title {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 12px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .progress-bg {
+      width: 100%;
+      height: 6px;
+      background: #f0f0f0;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background: #7c3aed;
+      transition: width 0.3s ease;
+    }
+    .progress-bar.success {
+      background: #10B981;
+    }
+    .progress-bar.error {
+      background: #EF4444;
+    }
+    .status-text {
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+    @keyframes slideIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  `;
+  shadow.appendChild(style);
+
+  // 注入 HTML 结构
+  const container = document.createElement('div');
+  container.className = 'card';
+  container.id = 'progress-card';
+  container.innerHTML = `
+    <div class="title">
+      <span>📎</span>
+      <span>ObsiClip</span>
+    </div>
+    <div class="progress-bg">
+      <div class="progress-bar" id="p-bar"></div>
+    </div>
+    <div class="status-text">
+      <span id="p-text">准备中...</span>
+      <span id="p-num">0%</span>
+    </div>
+  `;
+  shadow.appendChild(container);
+}
+
+// 显示进度 UI
+function showProgressUI() {
+  if (!progressHost?.shadowRoot) {
+    createProgressPanel();
+  }
+  const card = progressHost?.shadowRoot?.getElementById('progress-card');
+  const pBar = progressHost?.shadowRoot?.getElementById('p-bar');
+  if (card) {
+    card.classList.add('visible');
+    pBar?.classList.remove('success', 'error');
+  }
+}
+
+// 更新进度
+function updateProgress(progress: number, text: string) {
+  if (!progressHost?.shadowRoot) return;
+
+  const card = progressHost.shadowRoot.getElementById('progress-card');
+  const pBar = progressHost.shadowRoot.getElementById('p-bar');
+  const pText = progressHost.shadowRoot.getElementById('p-text');
+  const pNum = progressHost.shadowRoot.getElementById('p-num');
+
+  if (!card?.classList.contains('visible')) {
+    card?.classList.add('visible');
+  }
+
+  if (pBar) {
+    pBar.style.width = `${progress}%`;
+    if (progress === 100) {
+      pBar.classList.add('success');
+    } else if (progress < 0) {
+      pBar.classList.add('error');
+      pBar.style.width = '100%';
+    }
+  }
+  if (pText) pText.textContent = text;
+  if (pNum) pNum.textContent = progress < 0 ? '' : `${progress}%`;
+}
+
+// 隐藏进度 UI
+function hideProgressUI() {
+  const card = progressHost?.shadowRoot?.getElementById('progress-card');
+  if (card) {
+    card.classList.remove('visible');
+  }
+}
 
 // 高亮样式
 const HIGHLIGHT_STYLE = {
@@ -32,6 +185,18 @@ export default defineContentScript({
 
         case 'CLEAR_HIGHLIGHT':
           clearAllHighlights();
+          break;
+
+        case 'PROGRESS_SHOW':
+          showProgressUI();
+          break;
+
+        case 'PROGRESS_UPDATE':
+          updateProgress(message.data.progress, message.data.text);
+          break;
+
+        case 'PROGRESS_HIDE':
+          hideProgressUI();
           break;
       }
     });

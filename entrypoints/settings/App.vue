@@ -17,7 +17,7 @@ import { useI18n } from '@/utils/i18n';
 const { t, locale, initLocale, setLocaleAndSave, SUPPORTED_LOCALES } = useI18n();
 
 // 当前 TAB
-type TabType = 'ai' | 'prompt' | 'save' | 'general';
+type TabType = 'ai' | 'prompt' | 'general';
 const activeTab = ref<TabType>('ai');
 
 // 状态
@@ -169,7 +169,6 @@ const providerNames = computed(() => ({
 const tabs = computed(() => [
   { key: 'ai' as TabType, label: t('settings.tabs.ai'), icon: '🤖' },
   { key: 'prompt' as TabType, label: t('settings.tabs.prompt'), icon: '📝' },
-  { key: 'save' as TabType, label: t('settings.tabs.save'), icon: '💾' },
   { key: 'general' as TabType, label: t('settings.tabs.general'), icon: '⚙️' },
 ]);
 </script>
@@ -285,26 +284,6 @@ const tabs = computed(() => [
           <div v-if="saveMessage" class="result-msg success">{{ saveMessage }}</div>
         </div>
 
-        <!-- 保存配置 -->
-        <div v-if="activeTab === 'save'" class="panel">
-          <h2>{{ t('settings.save.title') }}</h2>
-          <p class="panel-desc">{{ t('settings.save.desc') }}</p>
-
-          <div class="setting-item">
-            <label class="checkbox-label">
-              <input
-                type="checkbox"
-                v-model="autoSaveAfterAI"
-                @change="handleAutoSaveToggle"
-              />
-              <div class="checkbox-content">
-                <span class="checkbox-title">{{ t('settings.save.autoSave') }}</span>
-                <span class="checkbox-desc">{{ t('settings.save.autoSaveDesc') }}</span>
-              </div>
-            </label>
-          </div>
-        </div>
-
         <!-- 通用设置 -->
         <div v-if="activeTab === 'general'" class="panel">
           <h2>{{ t('settings.general.title') }}</h2>
@@ -326,6 +305,20 @@ const tabs = computed(() => [
                 </option>
               </select>
             </div>
+          </div>
+
+          <div class="setting-item">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                v-model="autoSaveAfterAI"
+                @change="handleAutoSaveToggle"
+              />
+              <div class="checkbox-content">
+                <span class="checkbox-title">{{ t('settings.general.backgroundAI') }}</span>
+                <span class="checkbox-desc">{{ t('settings.general.backgroundAIDesc') }}</span>
+              </div>
+            </label>
           </div>
         </div>
       </main>
@@ -549,6 +542,10 @@ button.primary:hover:not(:disabled) {
   background: var(--background-primary, #fff);
   border: 1px solid var(--border-color, #e0e0e0);
   border-radius: 8px;
+}
+
+.setting-item + .setting-item {
+  margin-top: 12px;
 }
 
 .checkbox-label {

@@ -53,6 +53,27 @@ function handleProcessWithAI() {
     });
     return;
   }
+
+  // 后台处理模式
+  if (settings.autoSaveAfterAI.value) {
+    browser.runtime.sendMessage({
+      type: 'AI_PROCESS_BACKGROUND',
+      data: {
+        content: content.rawMarkdown.value,
+        prompt: settings.promptModified.value ? settings.getFinalPrompt() : '',
+        config: settings.getLLMConfig(),
+        title: content.title.value,
+        url: content.extractedContent.value?.url || '',
+        author: content.extractedContent.value?.author,
+        folder: settings.folder.value,
+      },
+    });
+    // 关闭 popup，任务在后台继续
+    window.close();
+    return;
+  }
+
+  // 前台处理模式
   content.processWithAI(
     settings.getLLMConfig(),
     settings.getFinalPrompt(),
