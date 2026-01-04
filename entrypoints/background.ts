@@ -167,20 +167,60 @@ async function handleAIProcessBackground(message: AIProcessBackgroundMessage) {
 
   const systemPrompt = userPrompt || buildFinalPrompt(await getUserPrompt());
 
+  // 进度控制变量
+  let currentProgress = 40;
+  let progressTimer: ReturnType<typeof setInterval> | null = null;
+  let aiStarted = false;
+
+  // 启动丝滑进度（每秒 +1%，最高到 99%）
+  const startSmoothProgress = () => {
+    if (progressTimer) return;
+    progressTimer = setInterval(() => {
+      if (currentProgress < 99) {
+        currentProgress += 1;
+        sendMessageToTab(tabId, {
+          type: 'PROGRESS_UPDATE',
+          data: { progress: currentProgress, text: 'AI 正在整理内容...' }
+        });
+      } else {
+        // 到达 99% 停止
+        if (progressTimer) {
+          clearInterval(progressTimer);
+          progressTimer = null;
+        }
+      }
+    }, 1000);
+  };
+
+  // 停止进度定时器
+  const stopProgressTimer = () => {
+    if (progressTimer) {
+      clearInterval(progressTimer);
+      progressTimer = null;
+    }
+  };
+
   try {
     let aiResult = '';
 
     // 更新进度：开始 AI 处理
     await sendMessageToTab(tabId, { type: 'PROGRESS_UPDATE', data: { progress: 20, text: '正在提取页面内容...' } });
-
     await sendMessageToTab(tabId, { type: 'PROGRESS_UPDATE', data: { progress: 40, text: 'AI 正在整理内容...' } });
 
     for await (const chunk of streamChatCompletion(config, systemPrompt, content)) {
+      // 收到第一个 chunk 时启动丝滑进度
+      if (!aiStarted) {
+        aiStarted = true;
+        startSmoothProgress();
+      }
       aiResult += chunk;
     }
 
+    // AI 完成，停止进度定时器
+    stopProgressTimer();
+
     // 更新进度：解析结果
-    await sendMessageToTab(tabId, { type: 'PROGRESS_UPDATE', data: { progress: 80, text: '正在解析结果...' } });
+    await sendMessageToTab(tabId, { type: 'PROGRESS_UPDATE', data: { progress: 99, text: '正在解析结果...' } });
 
     // 解析 AI 结果
     const parsed = parseFrontmatter(aiResult);
@@ -209,6 +249,8 @@ async function handleAIProcessBackground(message: AIProcessBackgroundMessage) {
     await browser.tabs.update(tabId, { url: obsidianUri });
 
   } catch (error) {
+    // 出错时停止进度定时器
+    stopProgressTimer();
     console.error('Background AI process failed:', error);
     // 显示错误状态
     const errorMsg = error instanceof Error ? error.message : '未知错误';
