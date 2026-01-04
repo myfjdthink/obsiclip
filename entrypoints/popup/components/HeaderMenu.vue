@@ -1,4 +1,8 @@
 <script lang="ts" setup>
+import { useI18n } from '@/utils/i18n';
+
+const { t } = useI18n();
+
 defineProps<{
   title: string;
   sourceUrl: string;
@@ -28,7 +32,7 @@ function handleOpenSettings() {
           class="clickable-icon"
           @click="emit('refresh')"
           :disabled="refreshing"
-          title="刷新内容"
+          :title="t('popup.refreshContent')"
         >
           <svg :class="['icon', { spinning: refreshing }]" viewBox="0 0 24 24">
             <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
@@ -40,7 +44,7 @@ function handleOpenSettings() {
         <button
           class="clickable-icon"
           @click="handleOpenSettings"
-          title="设置"
+          :title="t('common.settings')"
         >
           <svg class="icon" viewBox="0 0 24 24">
             <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
@@ -56,7 +60,7 @@ function handleOpenSettings() {
       :value="title"
       @input="emit('update:title', ($event.target as HTMLInputElement).value)"
       class="title-input"
-      placeholder="笔记标题"
+      :placeholder="t('popup.titlePlaceholder')"
     />
   </header>
 </template>

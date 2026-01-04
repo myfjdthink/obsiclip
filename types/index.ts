@@ -9,13 +9,18 @@ export interface LLMConfig {
   model: string;
 }
 
+// 语言类型
+export type Locale = 'zh-CN' | 'en';
+
 // 用户设置
 export interface UserSettings {
   llm: LLMConfig;
   userPrompt: string;
+  customPrompt?: boolean; // 用户是否自定义了 Prompt
   obsidian: ObsidianConfig;
   recentPaths: string[];
   autoSaveAfterAI?: boolean; // AI 整理后自动保存
+  locale?: Locale; // 界面语言
 }
 
 // Obsidian 配置

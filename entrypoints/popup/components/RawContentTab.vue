@@ -1,5 +1,8 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
+import { useI18n } from '@/utils/i18n';
+
+const { t } = useI18n();
 
 defineProps<{
   rawMarkdown: string;
@@ -30,7 +33,7 @@ function handleDirectSave() {
       :value="rawMarkdown"
       @input="emit('update:rawMarkdown', ($event.target as HTMLTextAreaElement).value)"
       class="markdown-editor"
-      placeholder="提取的内容将显示在这里..."
+      :placeholder="t('rawContent.placeholder')"
     ></textarea>
 
     <div class="ai-btn-group">
@@ -42,13 +45,13 @@ function handleDirectSave() {
         <svg v-else class="btn-icon" viewBox="0 0 24 24">
           <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
         </svg>
-        {{ 'AI 智能整理' }}
+        {{ t('rawContent.aiProcess') }}
       </button>
       <button class="ai-btn dropdown-toggle" @click="showMenu = !showMenu" :disabled="!canSave">
         ▼
       </button>
       <div v-if="showMenu" class="dropdown-menu">
-        <button @click="handleDirectSave">直接保存</button>
+        <button @click="handleDirectSave">{{ t('rawContent.directSave') }}</button>
       </div>
     </div>
   </div>

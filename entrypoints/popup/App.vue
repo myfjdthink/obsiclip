@@ -3,10 +3,14 @@ import { ref, onMounted, watch, computed } from 'vue';
 import { useSettings } from './composables/useSettings';
 import { useContent } from './composables/useContent';
 import { useObsidian } from './composables/useObsidian';
+import { useI18n } from '@/utils/i18n';
 import HeaderMenu from './components/HeaderMenu.vue';
 import RawContentTab from './components/RawContentTab.vue';
 import AiPreviewTab from './components/AiPreviewTab.vue';
 import SaveFooter from './components/SaveFooter.vue';
+
+// i18n
+const { t, initLocale } = useI18n();
 
 // 视图状态
 const refreshing = ref(false);
@@ -30,11 +34,12 @@ const sourceUrl = computed(() => content.extractedContent.value?.url || '');
 // 初始化
 onMounted(async () => {
   try {
+    await initLocale();
     await settings.loadSettings();
     browser.runtime.onMessage.addListener(content.handleMessage);
     await content.extractContent();
   } catch (error) {
-    console.error('初始化失败:', error);
+    console.error('Init failed:', error);
   } finally {
     content.loading.value = false;
   }
@@ -102,19 +107,19 @@ async function handleRefresh() {
         :class="['tab', { active: content.activeTab.value === 'raw' }]"
         @click="content.activeTab.value = 'raw'"
       >
-        原始内容
+        {{ t('popup.tabs.raw') }}
       </button>
       <button
         :class="['tab', { active: content.activeTab.value === 'ai' }]"
         @click="content.activeTab.value = 'ai'"
       >
-        AI 整理
+        {{ t('popup.tabs.ai') }}
       </button>
     </div>
 
     <div v-if="content.loading.value" class="loading">
       <div class="spinner"></div>
-      <span>提取内容中...</span>
+      <span>{{ t('popup.loading') }}</span>
     </div>
 
     <main v-else class="content">

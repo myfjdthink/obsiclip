@@ -1,5 +1,8 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
+import { useI18n } from '@/utils/i18n';
+
+const { t } = useI18n();
 
 defineProps<{
   folder: string;
@@ -42,7 +45,7 @@ function handleCopyHtml() {
 <template>
   <footer class="footer">
     <div class="folder-row">
-      <label class="folder-label">文件夹/类别</label>
+      <label class="folder-label">{{ t('saveFooter.folderLabel') }}</label>
       <input
         :value="folder"
         @input="emit('update:folder', ($event.target as HTMLInputElement).value)"
@@ -57,16 +60,16 @@ function handleCopyHtml() {
     <div class="save-row">
       <div class="save-btn-group">
         <button class="save-btn primary" @click="handleSaveToObsidian" :disabled="!canSave || isProcessing">
-          保存到 Obsidian
+          {{ t('saveFooter.saveToObsidian') }}
         </button>
         <button class="save-btn dropdown-toggle" @click="showSaveMenu = !showSaveMenu" :disabled="isProcessing">
           ▼
         </button>
 
         <div v-if="showSaveMenu" class="save-menu">
-          <button @click="handleDownloadAsMd">保存为 .md 文件</button>
-          <button @click="handleCopyMd">复制 Markdown</button>
-          <button @click="handleCopyHtml">复制 HTML</button>
+          <button @click="handleDownloadAsMd">{{ t('saveFooter.saveAsMd') }}</button>
+          <button @click="handleCopyMd">{{ t('saveFooter.copyMd') }}</button>
+          <button @click="handleCopyHtml">{{ t('saveFooter.copyHtml') }}</button>
         </div>
       </div>
     </div>

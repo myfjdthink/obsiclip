@@ -3,6 +3,9 @@ import { ref, watch, nextTick } from 'vue';
 import MarkdownRender from 'markstream-vue';
 import 'markstream-vue/index.css';
 import type { AIProcessedContent } from '@/types';
+import { useI18n } from '@/utils/i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   currentPrompt: string;
@@ -40,7 +43,7 @@ watch(
     <!-- Prompt 设置区 -->
     <div class="prompt-section">
       <button class="prompt-toggle" @click="showPromptEditor = !showPromptEditor">
-        {{ showPromptEditor ? '收起' : '展开' }} Prompt 设置
+        {{ showPromptEditor ? t('aiPreview.collapsePrompt') : t('aiPreview.expandPrompt') }}
       </button>
 
       <div v-if="showPromptEditor" class="prompt-editor">
@@ -48,7 +51,7 @@ watch(
           :value="currentPrompt"
           @input="emit('update:currentPrompt', ($event.target as HTMLTextAreaElement).value)"
           rows="6"
-          placeholder="系统提示词..."
+          :placeholder="t('aiPreview.promptPlaceholder')"
         ></textarea>
         <button
           v-if="promptModified"
@@ -62,7 +65,7 @@ watch(
             <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
             <path d="M16 16h5v5" />
           </svg>
-          重新生成
+          {{ t('aiPreview.regenerate') }}
         </button>
       </div>
     </div>
@@ -71,12 +74,12 @@ watch(
     <div ref="previewAreaRef" class="preview-area">
       <div v-if="isProcessing && !aiResult" class="processing">
         <div class="spinner"></div>
-        <span>AI 正在整理...</span>
+        <span>{{ t('aiPreview.processing') }}</span>
       </div>
 
       <div v-else-if="processingError" class="error">
         <span>{{ processingError }}</span>
-        <button @click="emit('retry')">重试</button>
+        <button @click="emit('retry')">{{ t('common.retry') }}</button>
       </div>
 
       <template v-else-if="aiResult">
@@ -111,7 +114,7 @@ watch(
       </div>
 
       <div v-else class="empty">
-        <span>点击「AI 智能整理」开始处理</span>
+        <span>{{ t('aiPreview.emptyHint') }}</span>
       </div>
     </div>
   </div>

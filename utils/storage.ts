@@ -1,7 +1,7 @@
-import type { UserSettings, LLMConfig, ObsidianConfig } from '@/types';
+import type { UserSettings, LLMConfig, ObsidianConfig, Locale } from '@/types';
 
-// 系统固定提示词（用户不可修改）
-export const SYSTEM_PROMPT = `你是一个专业的知识管理助手。请处理以下网页内容，返回 YAML frontmatter + Markdown 格式的结构化数据。
+// 系统固定提示词 - 中文
+export const SYSTEM_PROMPT_ZH = `你是一个专业的知识管理助手。请处理以下网页内容，返回 YAML frontmatter + Markdown 格式的结构化数据。
 
 ## 输出格式（严格遵循）
 ---
@@ -17,6 +17,27 @@ summary: 50-100字摘要
 - frontmatter 必须是有效的 YAML 格式
 - 不要包含任何解释或对话
 - 用中文输出`;
+
+// 系统固定提示词 - 英文
+export const SYSTEM_PROMPT_EN = `You are a professional knowledge management assistant. Process the following web content and return structured data in YAML frontmatter + Markdown format.
+
+## Output Format (strictly follow)
+---
+title: Regenerated title
+category: Category
+summary: 50-100 word summary
+---
+
+(Body content)
+
+## Important Constraints
+- Output frontmatter (wrapped in ---) first, then body
+- Frontmatter must be valid YAML format
+- Do not include any explanations or dialogue
+- Output in English`;
+
+// 兼容旧代码
+export const SYSTEM_PROMPT = SYSTEM_PROMPT_ZH;
 
 // 用户可自定义提示词（默认值）
 export const DEFAULT_USER_PROMPT = `## 标题生成规则
@@ -60,6 +81,62 @@ export const DEFAULT_USER_PROMPT = `## 标题生成规则
 ### 适用场景
 - 场景1
 - 场景2`;
+
+// 用户可自定义提示词 - 英文
+export const DEFAULT_USER_PROMPT_EN = `## Title Generation Rules
+Generate a clear, accurate title based on the content:
+- Avoid clickbait, sensationalism, or exaggeration
+- Help readers quickly understand the article topic
+
+## Classification
+Choose the most matching category:
+- model: AI models (GPT, Claude, Llama, etc.)
+- tool: Development tools, frameworks (LangChain, Cursor, etc.)
+- product: AI products, applications (ChatGPT, Midjourney, etc.)
+- concept: AI concepts, methodologies (RAG, prompt engineering, etc.)
+- other: Content that cannot be categorized
+
+## Summary Requirements
+50-100 word summary highlighting core insights and practical value.
+
+## Content Organization
+**Do not keep the original text**, rewrite using this structure, keeping only key information:
+
+### Key Takeaways
+- Point 1: Core conclusion or finding
+- Point 2: ...
+- Point 3: ...
+(3-5 points, emphasizing practical value)
+
+### Background
+The problem/motivation the article addresses (2-3 sentences)
+
+### Core Content
+Brief description of the core solution/model/system design (can have subsections)
+
+### Strengths & Limitations
+**Strengths**:
+- ...
+
+**Limitations**:
+- ...
+
+### Use Cases
+- Scenario 1
+- Scenario 2`;
+
+// 兼容旧代码
+export { DEFAULT_USER_PROMPT as DEFAULT_USER_PROMPT_ZH };
+
+// 根据语言获取系统提示词
+export function getSystemPrompt(locale: Locale): string {
+  return locale === 'zh-CN' ? SYSTEM_PROMPT_ZH : SYSTEM_PROMPT_EN;
+}
+
+// 根据语言获取默认用户提示词
+export function getDefaultUserPrompt(locale: Locale): string {
+  return locale === 'zh-CN' ? DEFAULT_USER_PROMPT : DEFAULT_USER_PROMPT_EN;
+}
 
 // 组合最终 Prompt
 export function buildFinalPrompt(userPrompt: string): string {
@@ -291,5 +368,40 @@ export async function getAutoSaveAfterAI(): Promise<boolean> {
 export async function saveAutoSaveAfterAI(enabled: boolean): Promise<void> {
   const settings = await getSettings();
   settings.autoSaveAfterAI = enabled;
+  await saveSettings(settings);
+}
+
+// 获取语言设置
+export async function getLocale(): Promise<Locale | undefined> {
+  const settings = await getSettings();
+  return settings.locale;
+}
+
+// 保存语言设置
+export async function saveLocale(locale: Locale): Promise<void> {
+  const settings = await getSettings();
+  settings.locale = locale;
+  await saveSettings(settings);
+}
+
+// 检查用户是否自定义了 Prompt
+export async function hasCustomPrompt(): Promise<boolean> {
+  const settings = await getSettings();
+  return settings.customPrompt ?? false;
+}
+
+// 保存用户 Prompt（标记为自定义）
+export async function saveUserPromptWithFlag(userPrompt: string): Promise<void> {
+  const settings = await getSettings();
+  settings.userPrompt = userPrompt;
+  settings.customPrompt = true;
+  await saveSettings(settings);
+}
+
+// 重置用户 Prompt 为默认值（根据语言）
+export async function resetUserPromptForLocale(locale: Locale): Promise<void> {
+  const settings = await getSettings();
+  settings.userPrompt = getDefaultUserPrompt(locale);
+  settings.customPrompt = false;
   await saveSettings(settings);
 }

@@ -1,19 +1,23 @@
 <script lang="ts" setup>
 import { ref, onMounted, computed, watch } from 'vue';
-import type { LLMProvider, LLMConfig } from '@/types';
+import type { LLMProvider, LLMConfig, Locale } from '@/types';
 import {
   getSettings,
   saveLLMConfig,
   saveUserPrompt,
-  resetUserPrompt,
   saveAutoSaveAfterAI,
   PROVIDER_PRESETS,
-  DEFAULT_USER_PROMPT,
+  getDefaultUserPrompt,
+  resetUserPromptForLocale,
 } from '@/utils/storage';
 import { testConnection } from '@/utils/llm';
+import { useI18n } from '@/utils/i18n';
+
+// i18n
+const { t, locale, initLocale, setLocaleAndSave, SUPPORTED_LOCALES } = useI18n();
 
 // 当前 TAB
-type TabType = 'ai' | 'prompt' | 'save';
+type TabType = 'ai' | 'prompt' | 'save' | 'general';
 const activeTab = ref<TabType>('ai');
 
 // 状态
@@ -60,6 +64,7 @@ watch(provider, (newProvider) => {
 // 加载设置
 onMounted(async () => {
   try {
+    await initLocale();
     const settings = await getSettings();
     provider.value = settings.llm.provider;
     apiKey.value = settings.llm.apiKey;
@@ -68,7 +73,7 @@ onMounted(async () => {
     prompt.value = settings.userPrompt;
     autoSaveAfterAI.value = settings.autoSaveAfterAI ?? false;
   } catch (error) {
-    console.error('加载设置失败:', error);
+    console.error('Load settings failed:', error);
   } finally {
     loading.value = false;
   }
@@ -87,13 +92,13 @@ async function saveLLM() {
       model: model.value,
     };
     await saveLLMConfig(config);
-    saveMessage.value = '✓ 保存成功';
+    saveMessage.value = t('settings.ai.saveSuccess');
     setTimeout(() => {
       saveMessage.value = '';
     }, 2000);
   } catch (error) {
-    saveMessage.value = '✗ 保存失败';
-    console.error('保存失败:', error);
+    saveMessage.value = t('settings.ai.saveFailed');
+    console.error('Save failed:', error);
   } finally {
     saving.value = false;
   }
@@ -120,12 +125,12 @@ async function handleSavePrompt() {
   saving.value = true;
   try {
     await saveUserPrompt(prompt.value);
-    saveMessage.value = '✓ Prompt 已保存';
+    saveMessage.value = t('settings.prompt.saveSuccess');
     setTimeout(() => {
       saveMessage.value = '';
     }, 2000);
   } catch (error) {
-    saveMessage.value = '✗ 保存失败';
+    saveMessage.value = t('settings.ai.saveFailed');
   } finally {
     saving.value = false;
   }
@@ -133,9 +138,9 @@ async function handleSavePrompt() {
 
 // 重置 Prompt
 async function handleResetPrompt() {
-  await resetUserPrompt();
-  prompt.value = DEFAULT_USER_PROMPT;
-  saveMessage.value = '✓ 已重置为默认';
+  await resetUserPromptForLocale(locale.value);
+  prompt.value = getDefaultUserPrompt(locale.value);
+  saveMessage.value = t('settings.prompt.resetSuccess');
   setTimeout(() => {
     saveMessage.value = '';
   }, 2000);
@@ -146,26 +151,32 @@ async function handleAutoSaveToggle() {
   await saveAutoSaveAfterAI(autoSaveAfterAI.value);
 }
 
-// Provider 显示名称
-const providerNames: Record<LLMProvider, string> = {
-  openai: 'OpenAI',
-  claude: 'Claude (Anthropic)',
-  gemini: 'Gemini (Google)',
-  deepseek: 'DeepSeek',
-  custom: '自定义',
-};
+// 切换语言
+async function handleLocaleChange(newLocale: Locale) {
+  await setLocaleAndSave(newLocale);
+}
 
-// TAB 配置
-const tabs: { key: TabType; label: string; icon: string }[] = [
-  { key: 'ai', label: 'AI 配置', icon: '🤖' },
-  { key: 'prompt', label: 'Prompt 配置', icon: '📝' },
-  { key: 'save', label: '保存配置', icon: '💾' },
-];
+// Provider 显示名称 - 使用 computed 以支持语言切换
+const providerNames = computed(() => ({
+  openai: t('settings.providers.openai'),
+  claude: t('settings.providers.claude'),
+  gemini: t('settings.providers.gemini'),
+  deepseek: t('settings.providers.deepseek'),
+  custom: t('settings.providers.custom'),
+}));
+
+// TAB 配置 - 使用 computed 以支持语言切换
+const tabs = computed(() => [
+  { key: 'ai' as TabType, label: t('settings.tabs.ai'), icon: '🤖' },
+  { key: 'prompt' as TabType, label: t('settings.tabs.prompt'), icon: '📝' },
+  { key: 'save' as TabType, label: t('settings.tabs.save'), icon: '💾' },
+  { key: 'general' as TabType, label: t('settings.tabs.general'), icon: '⚙️' },
+]);
 </script>
 
 <template>
   <div class="settings-page">
-    <div v-if="loading" class="loading">加载中...</div>
+    <div v-if="loading" class="loading">{{ t('common.loading') }}</div>
 
     <template v-else>
       <!-- 左侧导航 -->
@@ -188,11 +199,11 @@ const tabs: { key: TabType; label: string; icon: string }[] = [
       <main class="content">
         <!-- AI 配置 -->
         <div v-if="activeTab === 'ai'" class="panel">
-          <h2>AI 服务配置</h2>
-          <p class="panel-desc">配置用于内容整理的 AI 服务</p>
+          <h2>{{ t('settings.ai.title') }}</h2>
+          <p class="panel-desc">{{ t('settings.ai.desc') }}</p>
 
           <div class="form-group">
-            <label>服务商</label>
+            <label>{{ t('settings.ai.provider') }}</label>
             <select v-model="provider">
               <option v-for="(name, key) in providerNames" :key="key" :value="key">
                 {{ name }}
@@ -201,33 +212,33 @@ const tabs: { key: TabType; label: string; icon: string }[] = [
           </div>
 
           <div class="form-group">
-            <label>API Key</label>
+            <label>{{ t('settings.ai.apiKey') }}</label>
             <input
               v-model="apiKey"
               type="password"
-              placeholder="sk-..."
+              :placeholder="t('settings.ai.apiKeyPlaceholder')"
               autocomplete="off"
             />
-            <span class="hint">🔒 本地加密存储，不会上传到任何服务器</span>
+            <span class="hint">{{ t('settings.ai.apiKeyHint') }}</span>
           </div>
 
           <div class="form-group">
-            <label>Base URL</label>
+            <label>{{ t('settings.ai.baseUrl') }}</label>
             <input
               v-model="baseUrl"
               type="text"
-              :placeholder="isCustomProvider ? '输入 API 地址' : '使用默认地址'"
+              :placeholder="isCustomProvider ? t('settings.ai.baseUrlPlaceholder') : t('settings.ai.baseUrlDefault')"
             />
-            <span class="hint">支持 OneAPI 等代理服务</span>
+            <span class="hint">{{ t('settings.ai.baseUrlHint') }}</span>
           </div>
 
           <div class="form-group">
-            <label>模型</label>
+            <label>{{ t('settings.ai.model') }}</label>
             <input
               v-model="model"
               type="text"
               :list="suggestedModels.length > 0 ? 'model-list' : undefined"
-              placeholder="输入模型名称"
+              :placeholder="t('settings.ai.modelPlaceholder')"
             />
             <datalist id="model-list">
               <option v-for="m in suggestedModels" :key="m" :value="m" />
@@ -236,15 +247,15 @@ const tabs: { key: TabType; label: string; icon: string }[] = [
 
           <div class="button-group">
             <button @click="handleTestConnection" :disabled="testing || !apiKey">
-              {{ testing ? '测试中...' : '测试连接' }}
+              {{ testing ? t('settings.ai.testing') : t('settings.ai.testConnection') }}
             </button>
             <button @click="saveLLM" :disabled="saving" class="primary">
-              {{ saving ? '保存中...' : '保存配置' }}
+              {{ saving ? t('settings.ai.saving') : t('settings.ai.saveConfig') }}
             </button>
           </div>
 
           <div v-if="testResult" :class="['result-msg', testResult.success ? 'success' : 'error']">
-            {{ testResult.success ? '✓ 连接成功' : `✗ 连接失败: ${testResult.error}` }}
+            {{ testResult.success ? t('settings.ai.testSuccess') : `${t('settings.ai.testFailed')}: ${testResult.error}` }}
           </div>
 
           <div v-if="saveMessage" class="result-msg success">{{ saveMessage }}</div>
@@ -252,22 +263,22 @@ const tabs: { key: TabType; label: string; icon: string }[] = [
 
         <!-- Prompt 配置 -->
         <div v-if="activeTab === 'prompt'" class="panel">
-          <h2>Prompt 预设</h2>
-          <p class="panel-desc">自定义 AI 处理内容时使用的系统提示词</p>
+          <h2>{{ t('settings.prompt.title') }}</h2>
+          <p class="panel-desc">{{ t('settings.prompt.desc') }}</p>
 
           <div class="form-group">
             <textarea
               v-model="prompt"
               rows="16"
-              placeholder="输入系统提示词..."
+              :placeholder="t('settings.prompt.placeholder')"
               class="prompt-textarea"
             ></textarea>
           </div>
 
           <div class="button-group">
-            <button @click="handleResetPrompt">重置为默认</button>
+            <button @click="handleResetPrompt">{{ t('settings.prompt.reset') }}</button>
             <button @click="handleSavePrompt" :disabled="saving" class="primary">
-              {{ saving ? '保存中...' : '保存 Prompt' }}
+              {{ saving ? t('settings.ai.saving') : t('settings.prompt.save') }}
             </button>
           </div>
 
@@ -276,8 +287,8 @@ const tabs: { key: TabType; label: string; icon: string }[] = [
 
         <!-- 保存配置 -->
         <div v-if="activeTab === 'save'" class="panel">
-          <h2>保存配置</h2>
-          <p class="panel-desc">配置内容保存时的行为</p>
+          <h2>{{ t('settings.save.title') }}</h2>
+          <p class="panel-desc">{{ t('settings.save.desc') }}</p>
 
           <div class="setting-item">
             <label class="checkbox-label">
@@ -287,10 +298,34 @@ const tabs: { key: TabType; label: string; icon: string }[] = [
                 @change="handleAutoSaveToggle"
               />
               <div class="checkbox-content">
-                <span class="checkbox-title">AI 整理后自动保存</span>
-                <span class="checkbox-desc">开启后，AI 整理完成会自动保存到 Obsidian，无需手动点击保存</span>
+                <span class="checkbox-title">{{ t('settings.save.autoSave') }}</span>
+                <span class="checkbox-desc">{{ t('settings.save.autoSaveDesc') }}</span>
               </div>
             </label>
+          </div>
+        </div>
+
+        <!-- 通用设置 -->
+        <div v-if="activeTab === 'general'" class="panel">
+          <h2>{{ t('settings.general.title') }}</h2>
+          <p class="panel-desc">{{ t('settings.general.desc') }}</p>
+
+          <div class="setting-item">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-title">{{ t('settings.general.language') }}</span>
+                <span class="setting-desc">{{ t('settings.general.languageDesc') }}</span>
+              </div>
+              <select
+                :value="locale"
+                @change="handleLocaleChange(($event.target as HTMLSelectElement).value as Locale)"
+                class="language-select"
+              >
+                <option v-for="loc in SUPPORTED_LOCALES" :key="loc" :value="loc">
+                  {{ t(`languages.${loc}`) }}
+                </option>
+              </select>
+            </div>
           </div>
         </div>
       </main>
@@ -547,5 +582,47 @@ button.primary:hover:not(:disabled) {
   font-size: 13px;
   color: var(--text-muted);
   line-height: 1.4;
+}
+
+/* 通用设置样式 */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.setting-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.setting-title {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text-normal);
+}
+
+.setting-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.language-select {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 6px;
+  font-size: 14px;
+  background: var(--background-primary, #fff);
+  color: var(--text-normal);
+  cursor: pointer;
+  min-width: 120px;
+}
+
+.language-select:focus {
+  outline: none;
+  border-color: var(--interactive-accent, #007aff);
 }
 </style>
