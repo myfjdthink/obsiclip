@@ -2,6 +2,7 @@ import { ref, computed, watch } from 'vue';
 import type { LLMConfig, LLMProvider } from '@/types';
 import { getSettings, saveSettings, PROVIDER_PRESETS, DEFAULT_USER_PROMPT, buildFinalPrompt } from '@/utils/storage';
 import { testConnection } from '@/utils/llm';
+import { getLocale } from '@/utils/i18n';
 
 export function useSettings() {
   // 状态
@@ -126,9 +127,9 @@ export function useSettings() {
     promptModified.value = true;
   }
 
-  // 获取最终组合的 Prompt
+  // 获取最终组合的 Prompt（根据当前语言选择系统提示词）
   function getFinalPrompt(): string {
-    return buildFinalPrompt(currentPrompt.value);
+    return buildFinalPrompt(currentPrompt.value, getLocale());
   }
 
   return {

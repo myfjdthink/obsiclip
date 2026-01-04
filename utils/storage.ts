@@ -138,9 +138,10 @@ export function getDefaultUserPrompt(locale: Locale): string {
   return locale === 'zh-CN' ? DEFAULT_USER_PROMPT : DEFAULT_USER_PROMPT_EN;
 }
 
-// 组合最终 Prompt
-export function buildFinalPrompt(userPrompt: string): string {
-  return `${SYSTEM_PROMPT}\n\n${userPrompt}`;
+// 组合最终 Prompt（根据语言选择系统提示词）
+export function buildFinalPrompt(userPrompt: string, locale: Locale = 'zh-CN'): string {
+  const systemPrompt = getSystemPrompt(locale);
+  return `${systemPrompt}\n\n${userPrompt}`;
 }
 
 // 服务商预设配置
