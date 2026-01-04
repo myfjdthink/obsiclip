@@ -65,6 +65,17 @@ watch(
   }
 );
 
+// 监听 AI 处理完成，自动保存
+watch(
+  () => content.isProcessing.value,
+  (isProcessing, wasProcessing) => {
+    // 从处理中变为处理完成，且有结果，且开启了自动保存
+    if (wasProcessing && !isProcessing && content.aiResult.value && settings.autoSaveAfterAI.value) {
+      obsidian.saveToObsidian();
+    }
+  }
+);
+
 // 刷新内容
 async function handleRefresh() {
   refreshing.value = true;

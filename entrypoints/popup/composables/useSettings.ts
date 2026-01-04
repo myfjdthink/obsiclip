@@ -23,6 +23,9 @@ export function useSettings() {
   const tags = ref('');
   const recentPaths = ref<string[]>([]);
 
+  // 行为设置
+  const autoSaveAfterAI = ref(false);
+
   // 计算属性
   const hasApiKey = computed(() => apiKey.value.trim().length > 0);
 
@@ -64,6 +67,7 @@ export function useSettings() {
     tags.value = settings.obsidian.tags.join(', ');
     recentPaths.value = settings.recentPaths;
     currentPrompt.value = settings.userPrompt;
+    autoSaveAfterAI.value = settings.autoSaveAfterAI ?? false;
     return settings;
   }
 
@@ -144,6 +148,7 @@ export function useSettings() {
     folder,
     tags,
     recentPaths,
+    autoSaveAfterAI,
     // 计算属性
     hasApiKey,
     suggestedModels,

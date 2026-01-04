@@ -15,6 +15,7 @@ export interface UserSettings {
   userPrompt: string;
   obsidian: ObsidianConfig;
   recentPaths: string[];
+  autoSaveAfterAI?: boolean; // AI 整理后自动保存
 }
 
 // Obsidian 配置

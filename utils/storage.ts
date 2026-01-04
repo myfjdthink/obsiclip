@@ -59,9 +59,7 @@ export const DEFAULT_USER_PROMPT = `## 标题生成规则
 
 ### 适用场景
 - 场景1
-- 场景2
-
-注意：保留必要的代码块和数据，如果某个部分原文没有相关内容可以省略`;
+- 场景2`;
 
 // 组合最终 Prompt
 export function buildFinalPrompt(userPrompt: string): string {
@@ -107,6 +105,7 @@ const DEFAULT_SETTINGS: UserSettings = {
     tags: [],
   },
   recentPaths: [],
+  autoSaveAfterAI: false,
 };
 
 // 加密密钥（16 字节 = 128 位，用于 AES-128-GCM）
@@ -279,5 +278,18 @@ export async function addRecentPath(path: string): Promise<void> {
   const paths = settings.recentPaths.filter(p => p !== path);
   paths.unshift(path);
   settings.recentPaths = paths.slice(0, 5); // 最多保留 5 个
+  await saveSettings(settings);
+}
+
+// 获取自动保存设置
+export async function getAutoSaveAfterAI(): Promise<boolean> {
+  const settings = await getSettings();
+  return settings.autoSaveAfterAI ?? false;
+}
+
+// 保存自动保存设置
+export async function saveAutoSaveAfterAI(enabled: boolean): Promise<void> {
+  const settings = await getSettings();
+  settings.autoSaveAfterAI = enabled;
   await saveSettings(settings);
 }
