@@ -68,6 +68,8 @@ export type MessageType =
   | 'PROGRESS_SHOW'
   | 'PROGRESS_UPDATE'
   | 'PROGRESS_HIDE'
+  | 'PROGRESS_STREAM'
+  | 'PROGRESS_STATUS'
   | 'PING'
   | 'PONG';
 
@@ -164,6 +166,21 @@ export interface ProgressHideMessage extends BaseMessage {
   type: 'PROGRESS_HIDE';
 }
 
+export interface ProgressStreamMessage extends BaseMessage {
+  type: 'PROGRESS_STREAM';
+  data: {
+    chunk: string;
+  };
+}
+
+export interface ProgressStatusMessage extends BaseMessage {
+  type: 'PROGRESS_STATUS';
+  data: {
+    status: 'preparing' | 'streaming' | 'saving' | 'success' | 'error';
+    text: string;
+  };
+}
+
 export interface PingMessage extends BaseMessage {
   type: 'PING';
 }
@@ -190,6 +207,8 @@ export type Message =
   | ProgressShowMessage
   | ProgressUpdateMessage
   | ProgressHideMessage
+  | ProgressStreamMessage
+  | ProgressStatusMessage
   | PingMessage
   | PongMessage
   | ClearHighlightMessage;

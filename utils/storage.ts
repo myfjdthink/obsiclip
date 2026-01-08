@@ -7,7 +7,7 @@ export const SYSTEM_PROMPT_ZH = `你是一个专业的知识管理助手。请�
 ---
 title: 重新生成的标题
 category: 分类
-summary: 50-100字摘要
+author: 作者名称
 ---
 
 （正文内容）
@@ -15,6 +15,7 @@ summary: 50-100字摘要
 ## 重要约束
 - 先输出 frontmatter（---包裹的部分），再输出正文
 - frontmatter 必须是有效的 YAML 格式
+- author 字段从原文中提取，找不到则留空
 - 不要包含任何解释或对话
 - 用中文输出`;
 
@@ -25,7 +26,7 @@ export const SYSTEM_PROMPT_EN = `You are a professional knowledge management ass
 ---
 title: Regenerated title
 category: Category
-summary: 50-100 word summary
+author: Author name
 ---
 
 (Body content)
@@ -33,6 +34,7 @@ summary: 50-100 word summary
 ## Important Constraints
 - Output frontmatter (wrapped in ---) first, then body
 - Frontmatter must be valid YAML format
+- Extract author from original text, leave empty if not found
 - Do not include any explanations or dialogue
 - Output in English`;
 
@@ -53,8 +55,8 @@ export const DEFAULT_USER_PROMPT = `## 标题生成规则
 - concept：AI 概念、方法论（RAG、提示工程等）
 - other：无法归类的内容
 
-## 摘要要求
-50-100 字的内容摘要，突出核心观点和实用价值。
+## 作者提取
+从原文中提取作者名称，常见位置：文章开头、结尾、作者介绍区、个人主页等。
 
 ## 正文整理方式
 **不要保留原文**，用以下结构重写，只保留关键信息：
@@ -96,8 +98,8 @@ Choose the most matching category:
 - concept: AI concepts, methodologies (RAG, prompt engineering, etc.)
 - other: Content that cannot be categorized
 
-## Summary Requirements
-50-100 word summary highlighting core insights and practical value.
+## Author Extraction
+Extract author name from the original text. Common locations: article header, footer, author bio section, personal homepage, etc.
 
 ## Content Organization
 **Do not keep the original text**, rewrite using this structure, keeping only key information:

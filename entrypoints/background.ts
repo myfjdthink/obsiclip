@@ -62,7 +62,7 @@ async function handleAIProcess(message: AIProcessMessage, sender: browser.runtim
     // 发送完成消息
     browser.runtime.sendMessage({
       type: 'AI_STREAM_END',
-    }).catch(() => {});
+    }).catch(() => { });
 
   } catch (error) {
     // 发送错误消息
@@ -71,12 +71,12 @@ async function handleAIProcess(message: AIProcessMessage, sender: browser.runtim
       data: {
         error: error instanceof Error ? error.message : '未知错误',
       },
-    }).catch(() => {});
+    }).catch(() => { });
   }
 }
 
 // 解析 YAML frontmatter
-function parseFrontmatter(text: string): { title?: string; category?: string; content: string } {
+function parseFrontmatter(text: string): { title?: string; category?: string; author?: string; content: string } {
   if (!text.startsWith('---')) {
     return { content: text };
   }
@@ -91,6 +91,7 @@ function parseFrontmatter(text: string): { title?: string; category?: string; co
 
   let title: string | undefined;
   let category: string | undefined;
+  let author: string | undefined;
 
   for (const line of frontmatterStr.split('\n')) {
     const colonIndex = line.indexOf(':');
@@ -101,9 +102,10 @@ function parseFrontmatter(text: string): { title?: string; category?: string; co
 
     if (key === 'title') title = value;
     else if (key === 'category') category = value;
+    else if (key === 'author') author = value;
   }
 
-  return { title, category, content };
+  return { title, category, author, content };
 }
 
 // 生成 Frontmatter
@@ -129,10 +131,13 @@ function sanitizeFileName(name: string): string {
 }
 
 // 构建 Obsidian URI
-function buildObsidianURI(folder: string, title: string, content: string): string {
+function buildObsidianURI(folder: string, title: string, content: string, vault?: string): string {
   const filePath = folder ? `${folder}/${sanitizeFileName(title)}` : sanitizeFileName(title);
   let url = `obsidian://new?file=${encodeURIComponent(filePath)}`;
   url += `&content=${encodeURIComponent(content)}`;
+  if (vault) {
+    url += `&vault=${encodeURIComponent(vault)}`;
+  }
   return url;
 }
 
@@ -187,9 +192,9 @@ async function handleAIProcessBackground(message: AIProcessBackgroundMessage) {
     return;
   }
 
-  // 显示进度 UI
+  // 显示进度 UI 并设置准备状态
   await sendMessageToTab(tabId, { type: 'PROGRESS_SHOW' });
-  await sendMessageToTab(tabId, { type: 'PROGRESS_UPDATE', data: { progress: 10, text: '正在准备...' } });
+  await sendMessageToTab(tabId, { type: 'PROGRESS_STATUS', data: { status: 'preparing', text: '正在准备...' } });
 
   if (!config.apiKey) {
     config = await getLLMConfig();
@@ -197,68 +202,29 @@ async function handleAIProcessBackground(message: AIProcessBackgroundMessage) {
 
   const systemPrompt = userPrompt || buildFinalPrompt(await getUserPrompt());
 
-  // 进度控制变量
-  let currentProgress = 40;
-  let progressTimer: ReturnType<typeof setInterval> | null = null;
-  let aiStarted = false;
-
-  // 启动丝滑进度（每秒 +1%，最高到 99%）
-  const startSmoothProgress = () => {
-    if (progressTimer) return;
-    progressTimer = setInterval(() => {
-      if (currentProgress < 99) {
-        currentProgress += 1;
-        sendMessageToTab(tabId, {
-          type: 'PROGRESS_UPDATE',
-          data: { progress: currentProgress, text: 'AI 正在整理内容...' }
-        });
-      } else {
-        // 到达 99% 停止
-        if (progressTimer) {
-          clearInterval(progressTimer);
-          progressTimer = null;
-        }
-      }
-    }, 1000);
-  };
-
-  // 停止进度定时器
-  const stopProgressTimer = () => {
-    if (progressTimer) {
-      clearInterval(progressTimer);
-      progressTimer = null;
-    }
-  };
-
   try {
     let aiResult = '';
 
-    // 更新进度：开始 AI 处理
-    await sendMessageToTab(tabId, { type: 'PROGRESS_UPDATE', data: { progress: 20, text: '正在提取页面内容...' } });
-    await sendMessageToTab(tabId, { type: 'PROGRESS_UPDATE', data: { progress: 40, text: 'AI 正在整理内容...' } });
+    // 切换到流式状态
+    await sendMessageToTab(tabId, { type: 'PROGRESS_STATUS', data: { status: 'streaming', text: '' } });
 
     for await (const chunk of streamChatCompletion(config, systemPrompt, content)) {
-      // 收到第一个 chunk 时启动丝滑进度
-      if (!aiStarted) {
-        aiStarted = true;
-        startSmoothProgress();
-      }
       aiResult += chunk;
+      // 发送流式内容到 UI
+      await sendMessageToTab(tabId, { type: 'PROGRESS_STREAM', data: { chunk } });
     }
 
-    // AI 完成，停止进度定时器
-    stopProgressTimer();
-
-    // 更新进度：解析结果
-    await sendMessageToTab(tabId, { type: 'PROGRESS_UPDATE', data: { progress: 99, text: '正在解析结果...' } });
+    // 设置保存中状态
+    await sendMessageToTab(tabId, { type: 'PROGRESS_STATUS', data: { status: 'saving', text: '正在保存到 Obsidian...' } });
 
     // 解析 AI 结果
     const parsed = parseFrontmatter(aiResult);
     const finalTitle = parsed.title || title;
     const finalFolder = parsed.category || folder;
+    const finalAuthor = parsed.author || author; // 优先使用 AI 提取的作者
 
     // 生成完整内容
-    const frontmatter = generateFrontmatter(url, author);
+    const frontmatter = generateFrontmatter(url, finalAuthor);
     const fullContent = frontmatter + parsed.content;
 
     // 保存最近路径
@@ -266,11 +232,15 @@ async function handleAIProcessBackground(message: AIProcessBackgroundMessage) {
       await addRecentPath(finalFolder);
     }
 
-    // 构建并打开 Obsidian URI
-    const obsidianUri = buildObsidianURI(finalFolder, finalTitle, fullContent);
+    // 获取 Vault 设置
+    const settings = await getSettings();
+    const vault = settings.obsidian.vault;
 
-    // 更新进度：完成
-    await sendMessageToTab(tabId, { type: 'PROGRESS_UPDATE', data: { progress: 100, text: '剪藏成功！正在打开 Obsidian...' } });
+    // 构建并打开 Obsidian URI
+    const obsidianUri = buildObsidianURI(finalFolder, finalTitle, fullContent, vault);
+
+    // 设置成功状态
+    await sendMessageToTab(tabId, { type: 'PROGRESS_STATUS', data: { status: 'success', text: '剪藏成功！正在打开 Obsidian...' } });
 
     // 延迟一下让用户看到成功状态
     await new Promise(r => setTimeout(r, 800));
@@ -279,12 +249,10 @@ async function handleAIProcessBackground(message: AIProcessBackgroundMessage) {
     await browser.tabs.update(tabId, { url: obsidianUri });
 
   } catch (error) {
-    // 出错时停止进度定时器
-    stopProgressTimer();
     console.error('Background AI process failed:', error);
     // 显示错误状态
     const errorMsg = error instanceof Error ? error.message : '未知错误';
-    await sendMessageToTab(tabId, { type: 'PROGRESS_UPDATE', data: { progress: -1, text: `失败: ${errorMsg}` } });
+    await sendMessageToTab(tabId, { type: 'PROGRESS_STATUS', data: { status: 'error', text: `失败: ${errorMsg}` } });
     // 3秒后隐藏
     setTimeout(() => {
       sendMessageToTab(tabId, { type: 'PROGRESS_HIDE' });

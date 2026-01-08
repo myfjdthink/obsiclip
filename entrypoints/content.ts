@@ -1,8 +1,9 @@
 import { extractContent, elementsToMarkdown } from '@/utils/extractor';
-import type { ExtractedContent, Message, ContentExtractedMessage, SelectionUpdatedMessage, ProgressUpdateMessage } from '@/types';
+import type { ExtractedContent, Message, ContentExtractedMessage, SelectionUpdatedMessage, ProgressStreamMessage, ProgressStatusMessage } from '@/types';
 
 // 进度 UI 相关
 let progressHost: HTMLDivElement | null = null;
+let streamContent = ''; // 累积的流式内容
 
 // 创建进度浮窗（Shadow DOM 隔离）
 function createProgressPanel() {
@@ -32,7 +33,7 @@ function createProgressPanel() {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      width: 280px;
+      width: 320px;
       background: #fff;
       border-radius: 12px;
       box-shadow: 0 8px 30px rgba(0,0,0,0.12);
@@ -54,35 +55,60 @@ function createProgressPanel() {
       align-items: center;
       gap: 8px;
     }
-    .progress-bg {
-      width: 100%;
-      height: 6px;
-      background: #f0f0f0;
-      border-radius: 3px;
+    .title .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid #e0e0e0;
+      border-top-color: #7c3aed;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .title.success .spinner {
+      display: none;
+    }
+    .title.success::after {
+      content: '✅';
+    }
+    .title.error .spinner {
+      display: none;
+    }
+    .title.error::after {
+      content: '❌';
+    }
+    .stream-content {
+      font-size: 12px;
+      color: #555;
+      line-height: 1.5;
+      max-height: 54px;
       overflow: hidden;
+      position: relative;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      background: #f8f9fa;
+      border-radius: 6px;
+      padding: 8px 10px;
     }
-    .progress-bar {
-      width: 0%;
-      height: 100%;
-      background: #7c3aed;
-      transition: width 0.3s ease;
-    }
-    .progress-bar.success {
-      background: #10B981;
-    }
-    .progress-bar.error {
-      background: #EF4444;
+    .stream-text {
+      white-space: pre-wrap;
+      word-break: break-word;
     }
     .status-text {
-      font-size: 12px;
+      font-size: 13px;
       color: #666;
-      margin-top: 10px;
-      display: flex;
-      justify-content: space-between;
+      text-align: center;
+      padding: 8px 0;
+    }
+    .status-text.success {
+      color: #10B981;
+    }
+    .status-text.error {
+      color: #EF4444;
     }
     @keyframes slideIn {
       from { transform: translateY(20px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   `;
   shadow.appendChild(style);
@@ -92,17 +118,15 @@ function createProgressPanel() {
   container.className = 'card';
   container.id = 'progress-card';
   container.innerHTML = `
-    <div class="title">
+    <div class="title" id="p-title">
       <span>📎</span>
       <span>ObsiClip</span>
+      <div class="spinner"></div>
     </div>
-    <div class="progress-bg">
-      <div class="progress-bar" id="p-bar"></div>
+    <div class="stream-content" id="stream-container">
+      <div class="stream-text" id="stream-text"></div>
     </div>
-    <div class="status-text">
-      <span id="p-text">准备中...</span>
-      <span id="p-num">0%</span>
-    </div>
+    <div class="status-text" id="status-text" style="display: none;"></div>
   `;
   shadow.appendChild(container);
 }
@@ -112,38 +136,82 @@ function showProgressUI() {
   if (!progressHost?.shadowRoot) {
     createProgressPanel();
   }
+  streamContent = ''; // 重置流式内容
   const card = progressHost?.shadowRoot?.getElementById('progress-card');
-  const pBar = progressHost?.shadowRoot?.getElementById('p-bar');
+  const title = progressHost?.shadowRoot?.getElementById('p-title');
+  const streamContainer = progressHost?.shadowRoot?.getElementById('stream-container');
+  const streamText = progressHost?.shadowRoot?.getElementById('stream-text');
+  const statusText = progressHost?.shadowRoot?.getElementById('status-text');
+
   if (card) {
     card.classList.add('visible');
-    pBar?.classList.remove('success', 'error');
+  }
+  if (title) {
+    title.classList.remove('success', 'error');
+  }
+  if (streamContainer) {
+    streamContainer.style.display = 'block';
+  }
+  if (streamText) {
+    streamText.textContent = '';
+  }
+  if (statusText) {
+    statusText.style.display = 'none';
+    statusText.classList.remove('success', 'error');
   }
 }
 
-// 更新进度
-function updateProgress(progress: number, text: string) {
+// 追加流式内容
+function appendStreamContent(chunk: string) {
   if (!progressHost?.shadowRoot) return;
 
-  const card = progressHost.shadowRoot.getElementById('progress-card');
-  const pBar = progressHost.shadowRoot.getElementById('p-bar');
-  const pText = progressHost.shadowRoot.getElementById('p-text');
-  const pNum = progressHost.shadowRoot.getElementById('p-num');
+  streamContent += chunk;
 
-  if (!card?.classList.contains('visible')) {
-    card?.classList.add('visible');
+  const streamText = progressHost.shadowRoot.getElementById('stream-text');
+  const streamContainer = progressHost.shadowRoot.getElementById('stream-container');
+
+  if (streamText && streamContainer) {
+    // 只显示最后约 150 个字符，保持 2-3 行
+    const displayText = streamContent.length > 150
+      ? '...' + streamContent.slice(-147)
+      : streamContent;
+    streamText.textContent = displayText;
+
+    // 滚动到底部
+    streamContainer.scrollTop = streamContainer.scrollHeight;
   }
+}
 
-  if (pBar) {
-    pBar.style.width = `${progress}%`;
-    if (progress === 100) {
-      pBar.classList.add('success');
-    } else if (progress < 0) {
-      pBar.classList.add('error');
-      pBar.style.width = '100%';
+// 设置状态（准备中、完成、错误等）
+function setStatus(status: 'preparing' | 'streaming' | 'saving' | 'success' | 'error', text: string) {
+  if (!progressHost?.shadowRoot) return;
+
+  const title = progressHost.shadowRoot.getElementById('p-title');
+  const streamContainer = progressHost.shadowRoot.getElementById('stream-container');
+  const statusTextEl = progressHost.shadowRoot.getElementById('status-text');
+
+  if (!title || !streamContainer || !statusTextEl) return;
+
+  // 非流式状态时，显示状态文本
+  if (status === 'preparing' || status === 'saving' || status === 'success' || status === 'error') {
+    streamContainer.style.display = 'none';
+    statusTextEl.style.display = 'block';
+    statusTextEl.textContent = text;
+    statusTextEl.classList.remove('success', 'error');
+
+    if (status === 'success') {
+      title.classList.add('success');
+      statusTextEl.classList.add('success');
+    } else if (status === 'error') {
+      title.classList.add('error');
+      statusTextEl.classList.add('error');
     }
+  } else {
+    // 流式状态
+    streamContainer.style.display = 'block';
+    statusTextEl.style.display = 'none';
+    title.classList.remove('success', 'error');
   }
-  if (pText) pText.textContent = text;
-  if (pNum) pNum.textContent = progress < 0 ? '' : `${progress}%`;
 }
 
 // 隐藏进度 UI
@@ -191,8 +259,12 @@ export default defineContentScript({
           showProgressUI();
           break;
 
-        case 'PROGRESS_UPDATE':
-          updateProgress(message.data.progress, message.data.text);
+        case 'PROGRESS_STREAM':
+          appendStreamContent(message.data.chunk);
+          break;
+
+        case 'PROGRESS_STATUS':
+          setStatus(message.data.status, message.data.text);
           break;
 
         case 'PROGRESS_HIDE':
