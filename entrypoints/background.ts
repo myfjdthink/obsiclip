@@ -145,6 +145,29 @@ async function sendMessageToTab(tabId: number, message: Message) {
   }
 }
 
+// 确保 content script 已注入
+async function ensureContentScriptInjected(tabId: number): Promise<boolean> {
+  try {
+    // 尝试发送一个简单消息来检查 content script 是否已加载
+    await browser.tabs.sendMessage(tabId, { type: 'PING' });
+    return true;
+  } catch {
+    // 如果失败，尝试注入 content script
+    try {
+      await browser.scripting.executeScript({
+        target: { tabId },
+        files: ['/content-scripts/content.js'],
+      });
+      // 等待 content script 初始化
+      await new Promise(r => setTimeout(r, 100));
+      return true;
+    } catch (injectError) {
+      console.error('Failed to inject content script:', injectError);
+      return false;
+    }
+  }
+}
+
 // 处理后台 AI 请求
 async function handleAIProcessBackground(message: AIProcessBackgroundMessage) {
   const { content, prompt: userPrompt, title, url, author, folder } = message.data;
@@ -156,6 +179,13 @@ async function handleAIProcessBackground(message: AIProcessBackgroundMessage) {
   const tabId = currentTab?.id;
 
   if (!tabId) return;
+
+  // 确保 content script 已注入
+  const injected = await ensureContentScriptInjected(tabId);
+  if (!injected) {
+    console.error('Could not inject content script');
+    return;
+  }
 
   // 显示进度 UI
   await sendMessageToTab(tabId, { type: 'PROGRESS_SHOW' });

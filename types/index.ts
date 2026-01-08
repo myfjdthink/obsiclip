@@ -67,7 +67,9 @@ export type MessageType =
   | 'OPEN_OBSIDIAN_URL'
   | 'PROGRESS_SHOW'
   | 'PROGRESS_UPDATE'
-  | 'PROGRESS_HIDE';
+  | 'PROGRESS_HIDE'
+  | 'PING'
+  | 'PONG';
 
 // 消息基础结构
 export interface BaseMessage {
@@ -162,6 +164,18 @@ export interface ProgressHideMessage extends BaseMessage {
   type: 'PROGRESS_HIDE';
 }
 
+export interface PingMessage extends BaseMessage {
+  type: 'PING';
+}
+
+export interface PongMessage extends BaseMessage {
+  type: 'PONG';
+}
+
+export interface ClearHighlightMessage extends BaseMessage {
+  type: 'CLEAR_HIGHLIGHT';
+}
+
 export type Message =
   | ExtractContentMessage
   | ContentExtractedMessage
@@ -175,4 +189,7 @@ export type Message =
   | OpenObsidianUrlMessage
   | ProgressShowMessage
   | ProgressUpdateMessage
-  | ProgressHideMessage;
+  | ProgressHideMessage
+  | PingMessage
+  | PongMessage
+  | ClearHighlightMessage;

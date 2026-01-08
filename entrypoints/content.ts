@@ -198,6 +198,10 @@ export default defineContentScript({
         case 'PROGRESS_HIDE':
           hideProgressUI();
           break;
+
+        case 'PING':
+          sendResponse({ type: 'PONG' });
+          return true;
       }
     });
   },
