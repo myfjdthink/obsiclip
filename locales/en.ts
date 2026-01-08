@@ -105,7 +105,11 @@ export default {
       language: 'Interface Language',
       languageDesc: 'Select the display language for the extension',
       backgroundAI: 'AI Background Processing',
-      backgroundAIDesc: 'When enabled, AI processing runs in the background without waiting, and won\'t be interrupted when switching pages',
+      backgroundAIDesc: 'When enabled, AI processing will save automatically in the background. Only uncheck this if you need to review and edit the results before saving.',
+      vault: 'Specific Obsidian Vault',
+      vaultDesc: 'Specify the Obsidian vault to save to. If empty, it will save to the currently open vault.',
+      vaultPlaceholder: 'Enter Vault name',
+      vaultHint: 'Tip: Make sure this vault is open in Obsidian, otherwise saving will fail.',
     },
 
     // Provider names

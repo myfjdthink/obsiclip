@@ -185,7 +185,7 @@ const DEFAULT_SETTINGS: UserSettings = {
     tags: [],
   },
   recentPaths: [],
-  autoSaveAfterAI: false,
+  autoSaveAfterAI: true,
 };
 
 // 加密密钥（16 字节 = 128 位，用于 AES-128-GCM）
@@ -343,6 +343,13 @@ export async function getObsidianConfig(): Promise<ObsidianConfig> {
 export async function saveObsidianConfig(config: ObsidianConfig): Promise<void> {
   const settings = await getSettings();
   settings.obsidian = config;
+  await saveSettings(settings);
+}
+
+// 保存指定 Vault
+export async function saveObsidianVault(vault: string): Promise<void> {
+  const settings = await getSettings();
+  settings.obsidian.vault = vault;
   await saveSettings(settings);
 }
 

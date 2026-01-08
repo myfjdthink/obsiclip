@@ -105,7 +105,11 @@ export default {
       language: '界面语言',
       languageDesc: '选择扩展界面显示的语言',
       backgroundAI: 'AI 后台自动整理',
-      backgroundAIDesc: '开启后，点击 AI 整理会在后台完成任务，无需等待，切换页面也不会中断',
+      backgroundAIDesc: '开启后，AI 处理将在后台静默完成后自动保存。只有当你需要 Review 并手动修改 AI 处理结果时，才建议取消勾选',
+      vault: '指定 Obsidian Vault',
+      vaultDesc: '指定要保存到的 Obsidian 库。如果不填，将保存到当前默认开启的库',
+      vaultPlaceholder: '输入 Vault 名称',
+      vaultHint: '提示：确保 Obsidian 中已开启该 Vault，否则无法保存成功',
     },
 
     // 服务商名称

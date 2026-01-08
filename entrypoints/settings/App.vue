@@ -6,6 +6,7 @@ import {
   saveLLMConfig,
   saveUserPrompt,
   saveAutoSaveAfterAI,
+  saveObsidianVault,
   PROVIDER_PRESETS,
   getDefaultUserPrompt,
   resetUserPromptForLocale,
@@ -38,6 +39,7 @@ const prompt = ref('');
 
 // 行为设置
 const autoSaveAfterAI = ref(false);
+const vault = ref('');
 
 // 计算属性
 const suggestedModels = computed(() => {
@@ -72,6 +74,7 @@ onMounted(async () => {
     model.value = settings.llm.model;
     prompt.value = settings.userPrompt;
     autoSaveAfterAI.value = settings.autoSaveAfterAI ?? false;
+    vault.value = settings.obsidian.vault || '';
   } catch (error) {
     console.error('Load settings failed:', error);
   } finally {
@@ -149,6 +152,11 @@ async function handleResetPrompt() {
 // 切换自动保存
 async function handleAutoSaveToggle() {
   await saveAutoSaveAfterAI(autoSaveAfterAI.value);
+}
+
+// 保存 Vault
+async function handleVaultBlur() {
+  await saveObsidianVault(vault.value);
 }
 
 // 切换语言
@@ -319,6 +327,22 @@ const tabs = computed(() => [
                 <span class="checkbox-desc">{{ t('settings.general.backgroundAIDesc') }}</span>
               </div>
             </label>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info" style="margin-bottom: 12px;">
+              <span class="setting-title">{{ t('settings.general.vault') }}</span>
+              <span class="setting-desc">{{ t('settings.general.vaultDesc') }}</span>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <input
+                v-model="vault"
+                type="text"
+                :placeholder="t('settings.general.vaultPlaceholder')"
+                @blur="handleVaultBlur"
+              />
+              <span class="hint">{{ t('settings.general.vaultHint') }}</span>
+            </div>
           </div>
         </div>
       </main>
